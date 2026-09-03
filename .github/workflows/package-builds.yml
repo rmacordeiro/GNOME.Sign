@@ -1,0 +1,76 @@
+name: Package builds
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  meson-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Meson
+        run: python3 -m pip install meson ninja
+      - name: Configure build
+        run: meson setup /tmp/gnome-sign-build /home/runner/work/GNOME.Sign/GNOME.Sign --prefix=/usr
+      - name: Stage install tree
+        run: DESTDIR=/tmp/gnome-sign-dest meson install -C /tmp/gnome-sign-build
+
+  deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper dh-python meson ninja-build
+      - name: Build Debian package
+        run: dpkg-buildpackage -us -uc -b
+      - name: Upload Debian artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-packages
+          path: |
+            ../*.deb
+            ../*.buildinfo
+            ../*.changes
+
+  flatpak:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flatpak tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.gnome.Platform//48 org.gnome.Sdk//48
+      - name: Build Flatpak repo
+        run: flatpak-builder --repo=/tmp/flatpak-repo --force-clean /tmp/flatpak-build-dir io.github.ppgllrd.GNOME-Sign.json
+      - name: Create Flatpak bundle
+        run: flatpak build-bundle /tmp/flatpak-repo /tmp/gnome-sign.flatpak io.github.ppgllrd.GNOME-Sign
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-bundle
+          path: /tmp/gnome-sign.flatpak
+
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Snapcraft
+        run: sudo snap install snapcraft --classic
+      - name: Build snap
+        run: snapcraft --destructive-mode
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap-package
+          path: ./*.snap

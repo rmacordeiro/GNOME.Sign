@@ -2,7 +2,7 @@
 Name=GNOME-Sign
 Comment=Sign PDF documents with digital certificates
 Comment[es]=Firma documentos PDF con certificados digitales
-Exec=/app/bin/gnomesign-launcher.sh
+Exec=gnomesign
 Icon=io.github.ppgllrd.GNOME-Sign
 Terminal=false
 Type=Application

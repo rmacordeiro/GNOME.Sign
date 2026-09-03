@@ -23,16 +23,13 @@ from pyhanko_certvalidator.registry import SimpleCertificateStore
 from pyhanko.pdf_utils.generic import ArrayObject
 
 from i18n import I18NManager
+from runtime import is_sandboxed_runtime
 from certificate_manager import CertificateManager, KEYRING_SCHEMA
 from config_manager import ConfigManager
 from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
 from stamp_creator import HtmlStamp, pango_to_html
 from pyhanko.stamp import StaticStampStyle
-
-def is_running_in_flatpak():
-    """Checks if the application is running inside a Flatpak sandbox."""
-    return os.getenv('FLATPAK_ID') is not None
 
 class SearchResult:
     """A data class to hold information about a single text search result."""
@@ -490,7 +487,7 @@ class GnomeSign(Adw.Application):
         return output_path
 
     def _perform_signing(self, private_key_pyca, certificate_pyca):
-        """Orchestrates the signing and saving process, adapting for Flatpak."""
+        """Orchestrates the signing and saving process for native and sandboxed packages."""
         try:
             signed_bytes = self._get_signed_pdf_bytes_in_memory(private_key_pyca, certificate_pyca)
         except Exception as e:
@@ -499,7 +496,7 @@ class GnomeSign(Adw.Application):
             show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(e))
             return
 
-        if is_running_in_flatpak():
+        if is_sandboxed_runtime():
             self._save_via_portal(signed_bytes)
         else:
             try:

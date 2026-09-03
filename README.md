@@ -12,48 +12,76 @@ GNOME-Sign is a simple and easy-to-use application for signing PDF documents wit
 *   **Printing**: Print PDF documents using the system's native print dialog.
 *   **Recent Files**: Quickly access your recently opened files.
 
-## Installation and Running
+## Build and Packaging
 
-The recommended way to install and run GnomeSign is via Flatpak.
+GNOME-Sign now uses a packaging-neutral Meson install layout so the same source tree can be built for Flatpak, Snap, and Debian packages while keeping PDF signing support as a required feature.
 
-### Flatpak (Recommended)
+### Local install layout
 
-This method ensures that all dependencies are bundled, providing a consistent and hassle-free experience.
+1. Install Meson and Ninja.
+2. Configure the project:
+   ```bash
+   meson setup builddir --prefix=/usr
+   ```
+3. Install into a staging directory or the local system:
+   ```bash
+   DESTDIR="$PWD/out" meson install -C builddir
+   ```
 
-1.  **Prerequisites**: Make sure you have `flatpak` and `flatpak-builder` installed.
-2.  **Build and Install**:
-    ```bash
-    flatpak-builder build-dir io.github.ppgllrd.GNOME-Sign.json --user --install --force-clean
-    ```
-3.  **Run**:
-    ```bash
-    flatpak run io.github.ppgllrd.GNOME-Sign
-    ```
+The installed launcher is `gnomesign`, and the application data is installed under `share/io.github.ppgllrd.GNOME-Sign`.
 
-### Manual Installation (for Development)
+### Flatpak
 
-If you prefer to run the application from the source code for development purposes, you will need to install the dependencies manually.
+1. Install `flatpak` and `flatpak-builder`.
+2. Build the bundle:
+   ```bash
+   flatpak-builder build-dir io.github.ppgllrd.GNOME-Sign.json --user --install --force-clean
+   ```
+3. Run it:
+   ```bash
+   flatpak run io.github.ppgllrd.GNOME-Sign
+   ```
 
-**1. Python Dependencies**
+### Snap
+
+The Snap packaging metadata lives in `/home/runner/work/GNOME.Sign/GNOME.Sign/snap/snapcraft.yaml` and builds the same Meson install tree.
+
+Typical build command:
+```bash
+snapcraft --destructive-mode
+```
+
+### Debian package
+
+The Debian packaging metadata lives in `/home/runner/work/GNOME.Sign/GNOME.Sign/debian`.
+
+Typical build command:
+```bash
+dpkg-buildpackage -us -uc -b
+```
+
+## Running from source for development
+
+If you prefer to run the application directly from the source tree, install the dependencies manually.
+
+### Python dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-**2. System Dependencies**
+### System dependencies
 
 *   **On Debian/Ubuntu-based systems**:
     ```bash
-    sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1
+    sudo apt-get install python3-gi python3-gi-cairo gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-secret-1
     ```
 *   **On Fedora**:
     ```bash
-    sudo dnf install python3-gobject gtk4
+    sudo dnf install python3-gobject gtk4 libadwaita libsecret
     ```
 
-**3. Running from Source**
-
-Once the dependencies are installed, you can run the application with:
+### Run from source
 
 ```bash
 python3 src/main.py
@@ -61,4 +89,4 @@ python3 src/main.py
 
 ## License
 
-This project is licensed under the terms of the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the terms of the GNU Affero General Public License v3.0 or later. See the [LICENSE](LICENSE) file for more details.
