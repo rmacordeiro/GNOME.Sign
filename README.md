@@ -48,7 +48,7 @@ The Snap packaging metadata lives in `snap/snapcraft.yaml` and builds the same M
 
 Typical build command:
 ```bash
-snapcraft --destructive-mode
+snapcraft pack
 ```
 
 ### Debian package
