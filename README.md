@@ -44,7 +44,7 @@ The installed launcher is `gnomesign`, and the application data is installed und
 
 ### Snap
 
-The Snap packaging metadata lives in `/home/runner/work/GNOME.Sign/GNOME.Sign/snap/snapcraft.yaml` and builds the same Meson install tree.
+The Snap packaging metadata lives in `snap/snapcraft.yaml` and builds the same Meson install tree.
 
 Typical build command:
 ```bash
@@ -53,7 +53,7 @@ snapcraft --destructive-mode
 
 ### Debian package
 
-The Debian packaging metadata lives in `/home/runner/work/GNOME.Sign/GNOME.Sign/debian`.
+The Debian packaging metadata lives in `debian/`.
 
 Typical build command:
 ```bash

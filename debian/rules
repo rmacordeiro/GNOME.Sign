@@ -1,4 +1,4 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --buildsystem=meson --with python3
+	dh $@ --buildsystem=meson

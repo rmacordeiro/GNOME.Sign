@@ -18,7 +18,7 @@ jobs:
       - name: Install Meson
         run: python3 -m pip install meson ninja
       - name: Configure build
-        run: meson setup /tmp/gnome-sign-build /home/runner/work/GNOME.Sign/GNOME.Sign --prefix=/usr
+        run: meson setup /tmp/gnome-sign-build . --prefix=/usr
       - name: Stage install tree
         run: DESTDIR=/tmp/gnome-sign-dest meson install -C /tmp/gnome-sign-build
 
@@ -29,7 +29,7 @@ jobs:
       - name: Install packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y debhelper dh-python meson ninja-build
+          sudo apt-get install -y build-essential debhelper meson ninja-build
       - name: Build Debian package
         run: dpkg-buildpackage -us -uc -b
       - name: Upload Debian artifacts
