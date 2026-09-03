@@ -1,5 +1,5 @@
 name: gnome-sign
-base: core24
+base: core26  # Updated to Ubuntu 26.04 base
 version: '1.0.0'
 summary: Sign PDF documents with digital certificates
 description: |
@@ -30,7 +30,19 @@ apps:
       - x11
 
 parts:
+  # 1. Added the mandatory Python runtime environment for core26
+  python-runtime:
+    plugin: nil
+    stage-packages:
+      - libpython3.14-minimal
+      - libpython3.14-stdlib
+      - python3-minimal       # Creates the 'python3' symlink
+      - python3.14-minimal
+      - python3.14-venv
+
+  # 2. Updated application part
   gnome-sign:
+    after: [python-runtime]  # Ensures the python environment builds first
     plugin: meson
     source: .
     meson-parameters:
@@ -40,24 +52,26 @@ parts:
       - ninja-build
       - pkg-config
       - python3
+    # System non-python libraries 
     stage-packages:
       - gir1.2-adw-1
       - gir1.2-gtk-4.0
       - gir1.2-secret-1
       - libadwaita-1-0
       - libsecret-1-0
-      - python3-certifi
-      - python3-cffi
-      - python3-cryptography
-      - python3-gi
-      - python3-gi-cairo
-      - python3-idna
-      - python3-lxml
-      - python3-oscrypto
-      - python3-pyhanko
-      - python3-pyhanko-certvalidator
-      - python3-pymupdf
-      - python3-requests
-      - python3-tzlocal
-      - python3-urllib3
-      - python3-yaml
+    # Python application dependencies downloaded directly from PyPI
+    python-packages:
+      - certifi
+      - cffi
+      - cryptography
+      - PyGObject             # Replaces python3-gi & python3-gi-cairo
+      - idna
+      - lxml
+      - oscrypto
+      - pyhanko
+      - pyhanko-certvalidator
+      - pymupdf               # Resolves the python3-pymupdf missing error
+      - requests
+      - tzlocal
+      - urllib3
+      - pyyaml                # Replaces python3-yaml
