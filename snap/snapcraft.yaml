@@ -30,7 +30,16 @@ apps:
       - x11
 
 parts:
+  # 1. Create a dedicated part to download pyhanko from PyPI
+  python-deps:
+    plugin: python
+    source: .
+    python-packages:
+      - pyhanko
+
+  # 2. Update your main application part
   gnome-sign:
+    after: [python-deps]  # Wait for pyhanko to build first
     plugin: meson
     source: .
     meson-parameters:
@@ -54,9 +63,8 @@ parts:
       - python3-idna
       - python3-lxml
       - python3-oscrypto
-      - python3-pyhanko
-      - python3-pyhanko-certvalidator
-      - python3-fitz                    
+      - python3-pyhanko-certvalidator  # Kept (exists in Ubuntu repositories)
+      - python3-fitz                   # Kept (replaces python3-pymupdf)
       - python3-requests
       - python3-tzlocal
       - python3-urllib3
