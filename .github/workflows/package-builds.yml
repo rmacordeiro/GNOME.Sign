@@ -35,14 +35,15 @@ jobs:
           sudo apt-get install -y build-essential debhelper meson ninja-build
       - name: Build Debian package
         run: dpkg-buildpackage -us -uc -b
+      - name: Collect Debian artifacts
+        run: |
+          mkdir -p artifacts
+          cp ../*.deb ../*.buildinfo ../*.changes artifacts/
       - name: Upload Debian artifacts
         uses: actions/upload-artifact@v4
         with:
           name: deb-packages
-          path: |
-            ../*.deb
-            ../*.buildinfo
-            ../*.changes
+          path: artifacts/*
 
   flatpak:
     runs-on: ubuntu-latest
@@ -71,7 +72,7 @@ jobs:
       - name: Install Snapcraft
         run: sudo snap install snapcraft --classic
       - name: Build snap
-        run: snapcraft --destructive-mode
+        run: sudo snapcraft --destructive-mode
       - name: Upload snap artifact
         uses: actions/upload-artifact@v4
         with:
