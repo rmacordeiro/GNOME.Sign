@@ -1,0 +1,63 @@
+name: gnome-sign
+base: core24
+version: '1.0.0'
+summary: Sign PDF documents with digital certificates
+description: |
+  GNOME-Sign is a GTK4/libadwaita desktop application for viewing,
+  validating and digitally signing PDF files with PKCS#12 certificates.
+license: AGPL-3.0-or-later
+grade: stable
+confinement: strict
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  gnome-sign:
+    command: usr/bin/gnomesign
+    extensions: [gnome]
+    plugs:
+      - desktop
+      - desktop-legacy
+      - gsettings
+      - home
+      - network
+      - opengl
+      - password-manager-service
+      - removable-media
+      - wayland
+      - x11
+
+parts:
+  gnome-sign:
+    plugin: meson
+    source: .
+    meson-parameters:
+      - --prefix=/usr
+    build-packages:
+      - meson
+      - ninja-build
+      - pkg-config
+      - python3
+    stage-packages:
+      - gir1.2-adw-1
+      - gir1.2-gtk-4.0
+      - gir1.2-secret-1
+      - libadwaita-1-0
+      - libsecret-1-0
+      - python3-certifi
+      - python3-cffi
+      - python3-cryptography
+      - python3-gi
+      - python3-gi-cairo
+      - python3-idna
+      - python3-lxml
+      - python3-oscrypto
+      - python3-pyhanko
+      - python3-pyhanko-certvalidator
+      - python3-pymupdf
+      - python3-requests
+      - python3-tzlocal
+      - python3-urllib3
+      - python3-yaml

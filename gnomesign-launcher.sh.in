@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+APP_ROOT="${SNAP:-}"
+PKGDATA_DIR="${APP_ROOT}@pkgdatadir@"
+
+export PYTHONPATH="$PKGDATA_DIR${PYTHONPATH:+:$PYTHONPATH}"
+cd "$PKGDATA_DIR"
+
+exec python3 main.py "$@"
