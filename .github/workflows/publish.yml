@@ -1,0 +1,102 @@
+name: Publish packages
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deb:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper meson ninja-build
+      - name: Build Debian package
+        run: dpkg-buildpackage -us -uc -b
+      - name: Collect Debian artifacts
+        run: |
+          mkdir -p dist/deb
+          cp ../*.deb ../*.buildinfo ../*.changes dist/deb/
+      - name: Upload Debian artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-packages
+          path: dist/deb/*
+
+  flatpak:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flatpak tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          sudo flatpak install -y flathub org.gnome.Platform//48 org.gnome.Sdk//48
+      - name: Build Flatpak repo
+        run: flatpak-builder --repo=/tmp/flatpak-repo --force-clean /tmp/flatpak-build-dir io.github.ppgllrd.GNOME-Sign.json
+      - name: Create Flatpak bundle
+        run: |
+          mkdir -p dist
+          flatpak build-bundle /tmp/flatpak-repo dist/gnome-sign.flatpak io.github.ppgllrd.GNOME-Sign
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: flatpak-bundle
+          path: dist/gnome-sign.flatpak
+
+  snap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Snapcraft
+        run: sudo snap install snapcraft --classic
+      - name: Build snap
+        run: sudo snapcraft --destructive-mode
+      - name: Collect snap artifact
+        run: |
+          mkdir -p dist/snap
+          cp ./*.snap dist/snap/
+      - name: Upload snap artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap-package
+          path: dist/snap/*.snap
+
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - deb
+      - flatpak
+      - snap
+    if: github.event_name == 'release'
+    steps:
+      - name: Download Debian artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-packages
+          path: release-assets/deb
+      - name: Download Flatpak artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: flatpak-bundle
+          path: release-assets/flatpak
+      - name: Download Snap artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: snap-package
+          path: release-assets/snap
+      - name: Publish assets to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/deb/*
+            release-assets/flatpak/*.flatpak
+            release-assets/snap/*.snap
