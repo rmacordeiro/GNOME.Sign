@@ -56,7 +56,7 @@ parts:
       - python3-oscrypto
       - python3-pyhanko
       - python3-pyhanko-certvalidator
-      - python3-pymupdf
+      - python3-fitz                    
       - python3-requests
       - python3-tzlocal
       - python3-urllib3
