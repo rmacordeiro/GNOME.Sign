@@ -52,10 +52,7 @@ parts:
       - pkg-config
       - python3
     stage-packages:
-      - gir1.2-adw-1
-      - gir1.2-gtk-4.0
       - gir1.2-secret-1
-      - libadwaita-1-0
       - libsecret-1-0
       - python3-certifi
       - python3-cffi
