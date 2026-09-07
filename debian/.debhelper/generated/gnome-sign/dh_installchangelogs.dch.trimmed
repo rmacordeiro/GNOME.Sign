@@ -1,0 +1,13 @@
+gnome-sign (1.0.1-1) unstable; urgency=medium
+
+  * Stabilize Debian virtualenv packaging and workflow installs.
+  * Fix release publishing workflow to attach packages to releases.
+  * Pin download-artifact action to patched version for security.
+
+ -- GNOME-Sign Maintainers <packages@users.noreply.github.com>  Sun, 07 Sep 2026 10:00:00 +0000
+
+gnome-sign (1.0.0-1) unstable; urgency=medium
+
+  * Initial Debian packaging.
+
+ -- GNOME-Sign Maintainers <packages@users.noreply.github.com>  Thu, 03 Sep 2026 00:00:00 +0000
