@@ -5,4 +5,4 @@
 
 # Instruct dh-virtualenv to inject extra wheels from PyPI during package assembly
 override_dh_virtualenv:
-	dh_virtualenv --python python3 --pip-tool-arguments="--no-cache-dir" --builtin-venv
+	dh_virtualenv --python python3 --requirements debian/requirements-venv.txt --builtin-venv --skip-install
