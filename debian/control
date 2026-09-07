@@ -21,9 +21,7 @@ Depends:
  gir1.2-secret-1,
  python3-cryptography,
  python3-lxml,
- python3-pyhanko,
  python3-pyhanko-certvalidator,
- python3-pymupdf,
  python3-requests,
  python3-yaml
 Description: GNOME application for signing PDF documents
