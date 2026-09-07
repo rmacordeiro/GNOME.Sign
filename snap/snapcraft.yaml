@@ -38,6 +38,7 @@ parts:
     source: .
     python-packages:
       - pyhanko
+      - PyMuPDF>=1.24.0
 
   # 2. Update your main application part
   gnome-sign:
@@ -63,7 +64,6 @@ parts:
       - python3-lxml
       - python3-oscrypto
       - python3-pyhanko-certvalidator  # Kept (exists in Ubuntu repositories)
-      - python3-fitz                   # Kept (replaces python3-pymupdf)
       - python3-requests
       - python3-tzlocal
       - python3-urllib3
