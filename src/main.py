@@ -5,7 +5,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Secret", "1")
 from gi.repository import Gtk, Adw, Gio, Secret, GLib, GObject
-import fitz, sys, os, re
+import pymupdf, sys, os, re
 from datetime import datetime, timezone, timedelta
 from cryptography import x509
 from io import BytesIO
@@ -248,7 +248,7 @@ class GnomeSign(Adw.Application):
             except Exception as e:
                 print(f"Could not analyze for signatures: {e}")
 
-            self.current_file_path = file_path; self.doc = fitz.open(file_path); self.current_page = 0
+            self.current_file_path = file_path; self.doc = pymupdf.open(file_path); self.current_page = 0
             self.config.add_recent_file(file_path); self.config.set_last_folder(os.path.dirname(file_path))
             
             self.emit("document-changed", self.doc)
@@ -462,7 +462,7 @@ class GnomeSign(Adw.Application):
 
             # Render the page using Fitz's drawing device
             dl = page.get_displaylist()
-            dl.run(fitz.TOOLS.new_device("cairo", cr), fitz.Matrix(1, 1))
+            dl.run(pymupdf.TOOLS.new_device("cairo", cr), pymupdf.Matrix(1, 1))
 
             cr.restore()
 
@@ -519,7 +519,7 @@ class GnomeSign(Adw.Application):
         x, y, w, h = self.signature_rect
         view_width = self.window.drawing_area.get_width()
         scale = self.page.rect.width / view_width if view_width > 0 else 1
-        fitz_rect = fitz.Rect(x * scale, y * scale, (x + w) * scale, (y + h) * scale)
+        fitz_rect = pymupdf.Rect(x * scale, y * scale, (x + w) * scale, (y + h) * scale)
         parsed_pango_text = self.get_parsed_stamp_text(certificate_pyca)
         html_content = pango_to_html(parsed_pango_text)
         stamp_creator = HtmlStamp(html_content=html_content, width=fitz_rect.width, height=fitz_rect.height)
@@ -591,7 +591,7 @@ class GnomeSign(Adw.Application):
         for page_num, page in enumerate(self.doc):
             found_rects = page.search_for(text) 
             for rect in found_rects:
-                context_rect = fitz.Rect(
+                context_rect = pymupdf.Rect(
                     rect.x0 - 50,  
                     rect.y0 - 5,   
                     rect.x1 + 50,  

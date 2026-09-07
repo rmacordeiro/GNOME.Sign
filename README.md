@@ -91,11 +91,7 @@ python3 src/main.py
 
 If you enjoy this extension, consider buying me a tea 🍵 (I’m not really a coffee person :D)
 
-<p align="center">
-  <a href="https://www.buymeacoffee.com/rmacordeiro">
-    <img src="https://github.com/user-attachments/assets/3b58a7fc-e605-4742-94e9-0bf3144c5021" width="200"/>
-  </a>
-</p>
+[rmacordeiro](https://www.buymeacoffee.com/rmacordeiro)
 
 ## License
 
