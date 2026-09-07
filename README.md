@@ -28,7 +28,7 @@ GNOME-Sign now uses a packaging-neutral Meson install layout so the same source 
    DESTDIR="$PWD/out" meson install -C builddir
    ```
 
-The installed launcher is `gnomesign`, and the application data is installed under `share/io.github.ppgllrd.GNOME-Sign`.
+The installed launchers are `gnomesign` and `gnome-sign`, and the application data is installed under `share/io.github.ppgllrd.GNOME-Sign`.
 
 ### Flatpak
 

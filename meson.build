@@ -16,6 +16,18 @@ launcher = configure_file(
   configuration: launcher_conf
 )
 
+cli_wrapper = configure_file(
+  input: 'gnome-sign-wrapper.sh.in',
+  output: 'gnome-sign',
+  copy: true
+)
+
+desktop_alias = configure_file(
+  input: 'gnome-sign.desktop',
+  output: 'gnome-sign.desktop',
+  copy: true
+)
+
 root_sources = files(
   'src/certificate_manager.py',
   'src/config_manager.py',
@@ -43,12 +55,23 @@ install_data(
   install_mode: 'rwxr-xr-x'
 )
 
+install_data(
+  cli_wrapper,
+  install_dir: get_option('bindir'),
+  install_mode: 'rwxr-xr-x'
+)
+
 install_data(root_sources, install_dir: pkgdatadir)
 install_data(ui_sources, install_dir: join_paths(pkgdatadir, 'ui'))
 install_data(ui_component_sources, install_dir: join_paths(pkgdatadir, 'ui', 'components'))
 
 install_data(
   'io.github.ppgllrd.GNOME-Sign.desktop',
+  install_dir: join_paths(get_option('datadir'), 'applications')
+)
+
+install_data(
+  desktop_alias,
   install_dir: join_paths(get_option('datadir'), 'applications')
 )
 
