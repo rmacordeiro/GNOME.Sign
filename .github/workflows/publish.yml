@@ -1,13 +1,14 @@
-name: Publish packages
+name: Build and Publish Linux Packages
 
 on:
-  release:
-    types:
-      - published
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*' # Keeps automatic tagging active
+  workflow_dispatch: # <-- ADD THIS LINE: Enables a manual trigger button in GitHub UI
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   deb:
