@@ -17,6 +17,8 @@ apps:
   gnome-sign:
     command: usr/bin/gnomesign
     extensions: [gnome]
+    environment:
+      PYTHONPATH: $SNAP/usr/lib/python3/dist-packages:$SNAP/lib/python3.12/site-packages:$PYTHONPATH
     plugs:
       - desktop
       - desktop-legacy
