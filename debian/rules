@@ -1,4 +1,8 @@
 #!/usr/bin/make -f
 
 %:
-	dh $@ --buildsystem=meson
+	dh $@ --with python-virtualenv --buildsystem=meson
+
+# Instruct dh-virtualenv to inject extra wheels from PyPI during package assembly
+override_dh_virtualenv:
+	dh_virtualenv --python python3 --pip-tool-arguments="--no-cache-dir" --builtin-venv
