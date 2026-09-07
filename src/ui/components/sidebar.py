@@ -3,7 +3,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk, GdkPixbuf, GLib, GObject, Adw
-import fitz
+import pymupdf
 
 THUMBNAIL_WIDTH = 150
 
@@ -104,7 +104,7 @@ class Sidebar(Gtk.Box):
             page_rect = page.rect
             if page_rect.width == 0: continue
             zoom = THUMBNAIL_WIDTH / page_rect.width
-            matrix = fitz.Matrix(zoom, zoom)
+            matrix = pymupdf.Matrix(zoom, zoom)
             thumbnail_height = page_rect.height * zoom
             pix = page.get_pixmap(matrix=matrix, alpha=False)
             pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(pix.samples), GdkPixbuf.Colorspace.RGB, False, 8, pix.width, pix.height, pix.stride)

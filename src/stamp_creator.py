@@ -1,5 +1,5 @@
 # stamp_creator.py
-import fitz
+import pymupdf
 import re
 from io import BytesIO
 from pyhanko.stamp import StaticStampStyle
@@ -97,8 +97,8 @@ class HtmlStamp:
         self.pdf_buffer = self._render_html_to_pdf(html_content, width, height)
 
     def _render_html_to_pdf(self, html: str, width: float, height: float) -> BytesIO:
-        temp_doc = fitz.open()
-        page_rect = fitz.Rect(0, 0, width, height)
+        temp_doc = pymupdf.open()
+        page_rect = pymupdf.Rect(0, 0, width, height)
         page = temp_doc.new_page(width=width, height=height)
         page.insert_htmlbox(page_rect, html, rotate=0)
         pdf_bytes = temp_doc.tobytes()
@@ -108,9 +108,9 @@ class HtmlStamp:
     def get_pixbuf(self, width: int, height: int):
         if not self.pdf_buffer or width <= 0 or height <= 0: return None
         self.pdf_buffer.seek(0)
-        doc = fitz.open(stream=self.pdf_buffer.read(), filetype="pdf"); page = doc.load_page(0)
+        doc = pymupdf.open(stream=self.pdf_buffer.read(), filetype="pdf"); page = doc.load_page(0)
         zoom = width / page.rect.width
-        matrix = fitz.Matrix(zoom, zoom)
+        matrix = pymupdf.Matrix(zoom, zoom)
         pix = page.get_pixmap(matrix=matrix, alpha=False)
         from gi.repository import GdkPixbuf, GLib 
         pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(pix.samples), GdkPixbuf.Colorspace.RGB, False, 8, pix.width, pix.height, pix.stride)

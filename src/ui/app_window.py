@@ -3,7 +3,7 @@
 import gi
 gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1"); gi.require_version("PangoCairo", "1.0"); gi.require_version('GdkPixbuf', '2.0'); gi.require_version('Secret', '1')
 from gi.repository import Gtk, Adw, Gdk, Gio, GLib, GdkPixbuf, Secret, GObject
-import os, fitz
+import os, pymupdf
 
 class AppWindow(Adw.ApplicationWindow):
     """The main application window, containing the header bar, sidebar, and content area."""
@@ -410,7 +410,7 @@ class AppWindow(Adw.ApplicationWindow):
         if app.page and width > 0:
             if not app.display_pixbuf or app.display_pixbuf.get_width() != width:
                 zoom = width / app.page.rect.width
-                pix = app.page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
+                pix = app.page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False)
                 app.display_pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(pix.samples), GdkPixbuf.Colorspace.RGB, False, 8, pix.width, pix.height, pix.stride)
             Gdk.cairo_set_source_pixbuf(cr, app.display_pixbuf, 0, 0); cr.paint()
 
