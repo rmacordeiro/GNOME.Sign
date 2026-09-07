@@ -5,9 +5,12 @@ Maintainer: GNOME-Sign Maintainers <packages@users.noreply.github.com>
 Rules-Requires-Root: no
 Build-Depends:
  debhelper-compat (= 13),
+ dh-python,
+ dh-virtualenv,
  meson,
  ninja-build,
- python3
+ python3,
+ python3-all
 Standards-Version: 4.7.0
 Homepage: https://github.com/rmacordeiro/GNOME.Sign
 
@@ -21,7 +24,6 @@ Depends:
  gir1.2-secret-1,
  python3-cryptography,
  python3-lxml,
- python3-pyhanko-certvalidator,
  python3-requests,
  python3-yaml
 Description: GNOME application for signing PDF documents

@@ -1,0 +1,2 @@
+pyhanko>=0.20.0
+pymupdf>=1.24.0

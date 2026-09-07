@@ -3,8 +3,15 @@ set -eu
 
 APP_ROOT="${SNAP:-}"
 PKGDATA_DIR="${APP_ROOT}@pkgdatadir@"
+DEB_VENV_DIR="/opt/venvs/gnome-sign"
 
-export PYTHONPATH="$PKGDATA_DIR${PYTHONPATH:+:$PYTHONPATH}"
+if [ -d "$DEB_VENV_DIR" ]; then
+  DEB_VENV_SITE_PACKAGES="$(echo "$DEB_VENV_DIR"/lib/python3*/site-packages)"
+  export PYTHONPATH="$DEB_VENV_SITE_PACKAGES:$PKGDATA_DIR${PYTHONPATH:+:$PYTHONPATH}"
+else
+  export PYTHONPATH="$PKGDATA_DIR${PYTHONPATH:+:$PYTHONPATH}"
+fi
+
 cd "$PKGDATA_DIR"
 
 exec python3 main.py "$@"
