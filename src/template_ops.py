@@ -1,10 +1,10 @@
 def remove_signature_template(config, template_id):
     """Remove a template safely and preserve a valid active template selection."""
     templates = config.get_signature_templates()
-    if len(templates) <= 1:
+    if not any(t.get("id") == template_id for t in templates):
         return False
 
-    if not any(t.get("id") == template_id for t in templates):
+    if len(templates) <= 1:
         return False
 
     config.delete_template(template_id)
