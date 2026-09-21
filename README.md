@@ -70,6 +70,15 @@ If you prefer to run the application directly from the source tree, install the 
 pip install -r requirements.txt
 ```
 
+For development checks:
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+ruff check tests src/path_utils.py src/template_ops.py
+ruff format --check tests src/path_utils.py src/template_ops.py
+```
+
 ### System dependencies
 
 *   **On Debian/Ubuntu-based systems**:

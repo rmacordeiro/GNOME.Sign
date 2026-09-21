@@ -33,8 +33,10 @@ root_sources = files(
   'src/config_manager.py',
   'src/i18n.py',
   'src/main.py',
+  'src/path_utils.py',
   'src/runtime.py',
-  'src/stamp_creator.py'
+  'src/stamp_creator.py',
+  'src/template_ops.py'
 )
 
 ui_sources = files(
