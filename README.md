@@ -89,7 +89,7 @@ python3 src/main.py
 
 ## Support
 
-If you enjoy this extension, consider buying me a tea 🍵 (I’m not really a coffee person :D)
+If you enjoy this application, consider buying me a tea 🍵 (I’m not really a coffee person :D)
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/rmacordeiro">
