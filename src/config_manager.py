@@ -3,7 +3,15 @@ import os
 import json
 import uuid
 from collections import deque
-from gi.repository import GLib
+try:
+    from gi.repository import GLib
+except ImportError:
+    class _FallbackGLib:
+        @staticmethod
+        def get_user_config_dir():
+            return os.path.join(os.path.expanduser("~"), ".config")
+
+    GLib = _FallbackGLib()
 
 class ConfigManager:
     """Manages loading, saving, and accessing application configuration settings."""

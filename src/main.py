@@ -26,6 +26,8 @@ from i18n import I18NManager
 from runtime import is_sandboxed_runtime
 from certificate_manager import CertificateManager, KEYRING_SCHEMA
 from config_manager import ConfigManager
+from path_utils import generate_output_path
+from template_ops import remove_signature_template
 from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
 from stamp_creator import HtmlStamp, pango_to_html
@@ -471,20 +473,8 @@ class GnomeSign(Adw.Application):
             print(f"Error drawing page {page_nr} for printing: {e}")
 
     def _generate_output_path(self, input_path):
-        """
-        Generates a unique output filename based on the input path.
-        Appends '-signed.pdf', and adds a version number if a file with that name exists.
-        
-        NOTE: In Flatpak, os.path.exists() is limited by sandbox permissions.
-        This provides a best-effort suggestion; the portal itself will prevent overwrites.
-        """
-        base_path, ext = os.path.splitext(input_path)
-        output_path = f"{base_path}-signed{ext}"
-        version = 1
-        while os.path.exists(output_path):
-            output_path = f"{base_path}-signed-{version}{ext}"
-            version += 1
-        return output_path
+        """Returns a unique suggested output path for a signed copy."""
+        return generate_output_path(input_path)
 
     def _perform_signing(self, private_key_pyca, certificate_pyca):
         """Orchestrates the signing and saving process for native and sandboxed packages."""
@@ -826,6 +816,14 @@ class GnomeSign(Adw.Application):
             self.emit("certificates-changed")
         
         self.config.save()
+
+    def remove_template(self, template_id):
+        """Removes a signature template and keeps active-template state valid."""
+        removed = remove_signature_template(self.config, template_id)
+        if removed:
+            self.config.save()
+            self.emit("signature-state-changed")
+        return removed
 
     def request_add_new_certificate(self):
         """Manages the full flow of adding a new certificate."""

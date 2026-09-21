@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Meson/build outputs
+build/
+builddir/
+_build/
+dist/
+
+# Debian generated artifacts (keep debian source metadata)
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.debhelper
+debian/*.substvars
+debian/gnome-sign/
+debian/tmp/
+*.deb
+*.buildinfo
+*.changes
+
+# Flatpak
+.flatpak-builder/
+*.flatpak
+
+# Snap
+parts/
+prime/
+stage/
+*.snap

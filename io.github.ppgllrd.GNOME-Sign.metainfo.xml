@@ -12,17 +12,17 @@
   </description>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/ppgllrd/GNOME.Sign/refs/heads/main/screenshoots/screenshoot1.png</image>
+      <image>https://raw.githubusercontent.com/rmacordeiro/GNOME.Sign/refs/heads/main/screenshoots/screenshoot1.png</image>
       <caption>Welcome Window</caption>
       <caption xml:lang="es">Ventana de Bienvenida</caption>
     </screenshot>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/ppgllrd/GNOME.Sign/refs/heads/main/screenshoots/screenshoot2.png</image>
+      <image>https://raw.githubusercontent.com/rmacordeiro/GNOME.Sign/refs/heads/main/screenshoots/screenshoot2.png</image>
       <caption>Main Window signing a PDF</caption>
       <caption xml:lang="es">Ventana Principal firmando un PDF</caption>
     </screenshot>
     <screenshot>
-      <image>https://raw.githubusercontent.com/ppgllrd/GNOME.Sign/refs/heads/main/screenshoots/screenshoot3.png</image>
+      <image>https://raw.githubusercontent.com/rmacordeiro/GNOME.Sign/refs/heads/main/screenshoots/screenshoot3.png</image>
       <caption>Options</caption>
       <caption xml:lang="es">Opciones</caption>
     </screenshot>
@@ -32,6 +32,6 @@
   <url type="vcs-browser">https://github.com/rmacordeiro/GNOME.Sign</url>
   <launchable type="desktop-id">io.github.ppgllrd.GNOME-Sign.desktop</launchable>
   <provides><binary>gnomesign</binary></provides>
-  <releases><release version="1.0.1" date="2024-07-24"/></releases>
+  <releases><release version="1.0.1" date="2026-09-07"/></releases>
   <content_rating type="oars-1.1" />
 </component>
