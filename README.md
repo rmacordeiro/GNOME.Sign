@@ -79,6 +79,8 @@ ruff check tests src/path_utils.py src/template_ops.py
 ruff format --check tests src/path_utils.py src/template_ops.py
 ```
 
+The unit tests currently target non-GUI core logic and use a GI stub, so they can run without a full GTK runtime setup.
+
 ### System dependencies
 
 *   **On Debian/Ubuntu-based systems**:
