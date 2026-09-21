@@ -3,7 +3,10 @@ name: Build and Publish Linux Packages
 on:
   release:
     types:
+      - created
       - published
+      - released
+      - prereleased
   workflow_dispatch:
 
 permissions:
