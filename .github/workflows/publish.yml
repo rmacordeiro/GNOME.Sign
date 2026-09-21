@@ -4,9 +4,6 @@ on:
   release:
     types:
       - created
-      - published
-      - released
-      - prereleased
   workflow_dispatch:
 
 permissions:
