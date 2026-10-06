@@ -1,6 +1,6 @@
 name: gnome-sign
 base: core24
-version: '1.0.3'
+version: '1.0.4'
 summary: Sign PDF documents with digital certificates
 description: |
   GNOME-Sign is a GTK4/libadwaita desktop application for viewing,

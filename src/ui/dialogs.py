@@ -4,14 +4,13 @@ import gi
 gi.require_version("Secret", "1")
 gi.require_version("Gtk", "4.0")
 gi.require_version("PangoCairo", "1.0")
-from gi.repository import Gtk, Pango, PangoCairo, Gdk, Secret, GLib, Gio
-import os
+from gi.repository import Gtk
 
 def create_about_dialog(parent, i18n_func):
     """Creates and shows the About dialog."""
     dialog = Gtk.AboutDialog(transient_for=parent, modal=True)
     dialog.set_program_name(i18n_func("window_title"))
-    dialog.set_version("1.0.3")
+    dialog.set_version("1.0.4")
     dialog.set_comments(i18n_func("sign_reason"))
     dialog.set_logo_icon_name("io.github.ppgllrd.GNOME-Sign")
     dialog.set_website("https://github.com/rmacordeiro/GNOME.Sign")

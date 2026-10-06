@@ -7,7 +7,7 @@ gi.require_version("Secret", "1")
 from gi.repository import Gtk, Adw, Gio, Secret, GLib, GObject
 import pymupdf, sys, os, re
 from functools import lru_cache
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from cryptography import x509
 from io import BytesIO
 from pyhanko.pdf_utils.reader import PdfFileReader
@@ -22,16 +22,15 @@ from pyhanko.keys.internal import (
 from pyhanko_certvalidator import ValidationContext
 from pyhanko_certvalidator.registry import SimpleCertificateStore
 from asn1crypto import pem, x509 as asn1_x509
-from pyhanko.pdf_utils.generic import ArrayObject
 
 from i18n import I18NManager
 from runtime import is_sandboxed_runtime
 from certificate_manager import CertificateManager, KEYRING_SCHEMA
 from config_manager import ConfigManager
+from paths import generate_output_path
 from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
 from stamp_creator import HtmlStamp, pango_to_html
-from pyhanko.stamp import StaticStampStyle
 
 SYSTEM_CA_BUNDLES = ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt")
 
@@ -415,7 +414,6 @@ class GnomeSign(Adw.Application):
 
     def on_edit_stamps_clicked(self, action, param):
         """Shows the stamp editor dialog."""
-        from ui.stamp_editor_dialog import StampEditorDialog
         dialog = StampEditorDialog(parent_window=self.window, app=self)
         dialog.connect("destroy", lambda w: self.config.save())
         dialog.present()
@@ -506,20 +504,7 @@ class GnomeSign(Adw.Application):
             print(f"Error drawing page {page_nr} for printing: {e}")
 
     def _generate_output_path(self, input_path):
-        """
-        Generates a unique output filename based on the input path.
-        Appends '-signed.pdf', and adds a version number if a file with that name exists.
-        
-        NOTE: In Flatpak, os.path.exists() is limited by sandbox permissions.
-        This provides a best-effort suggestion; the portal itself will prevent overwrites.
-        """
-        base_path, ext = os.path.splitext(input_path)
-        output_path = f"{base_path}-signed{ext}"
-        version = 1
-        while os.path.exists(output_path):
-            output_path = f"{base_path}-signed-{version}{ext}"
-            version += 1
-        return output_path
+        return generate_output_path(input_path)
 
     def _perform_signing(self, private_key_pyca, certificate_pyca):
         """Orchestrates the signing and saving process for native and sandboxed packages."""
@@ -634,10 +619,6 @@ class GnomeSign(Adw.Application):
                 )  
                 context = page.get_textbox(context_rect).replace('\n', ' ').strip()                
                 self.search_results.append(SearchResult(page_num, rect, context))
-        self.window.sidebar.populate_search_results(self.search_results)
-        if self.search_results:
-            self.select_search_result(0)
-        self.display_page(self.current_page, keep_sidebar_view=True)
         self.window.sidebar.populate_search_results(self.search_results)
         if self.search_results:
             self.select_search_result(0)
@@ -861,6 +842,12 @@ class GnomeSign(Adw.Application):
             self.emit("certificates-changed")
         
         self.config.save()
+
+    def remove_template(self, template_id):
+        """Removes a signature template, falls back to a valid active template and notifies the UI."""
+        if self.config.delete_template(template_id):
+            self.config.save()
+            self.emit("signature-state-changed")
 
     def request_add_new_certificate(self):
         """Manages the full flow of adding a new certificate."""

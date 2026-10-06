@@ -1,3 +1,14 @@
+gnome-sign (1.0.4-1) unstable; urgency=medium
+
+  * Fix deleting stamp templates (missing application method); the active
+    template falls back to a remaining one and the last template is kept.
+  * Remove duplicated search-result population.
+  * Add missing translations (stamp editor, printing) in es, en and pt.
+  * Single locked dependency source (pyproject.toml, requirements.lock)
+    shared by Debian, Snap and Flatpak packaging.
+
+ -- GNOME-Sign Maintainers <packages@users.noreply.github.com>  Tue, 06 Oct 2026 12:00:00 +0000
+
 gnome-sign (1.0.3-1) unstable; urgency=medium
 
   * Security: disable automatic network fetching while validating signatures

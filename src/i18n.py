@@ -70,7 +70,18 @@ class I18NManager:
                 "prev_result_tooltip": "Resultado anterior",
                 "next_result_tooltip": "Siguiente resultado",
                 "print_document": "Imprimir Documento...",
-                "show_signatures_menu_item": "Mostrar Firmas"
+                "show_signatures_menu_item": "Mostrar Firmas",
+                "template": "Plantilla",
+                "template_content": "Contenido de la plantilla (marcado Pango)",
+                "font": "Fuente",
+                "size": "Tamaño",
+                "size_small": "Pequeño",
+                "size_normal": "Normal",
+                "size_large": "Grande",
+                "size_huge": "Enorme",
+                "print_error_title": "Error de impresión",
+                "print_error_message": "No se pudo imprimir: {}",
+                "print_success_toast": "Documento enviado a la impresora"
             },
             "en": {
                 "window_title": "GNOME-Sign", "open_pdf": "Open PDF...", "prev_page": "Previous page", "next_page": "Next page", 
@@ -134,7 +145,18 @@ class I18NManager:
                 "prev_result_tooltip": "Previous result",
                 "next_result_tooltip": "Next result",
                 "print_document": "Print Document...",
-                "show_signatures_menu_item": "Show Signatures"
+                "show_signatures_menu_item": "Show Signatures",
+                "template": "Template",
+                "template_content": "Template content (Pango markup)",
+                "font": "Font",
+                "size": "Size",
+                "size_small": "Small",
+                "size_normal": "Normal",
+                "size_large": "Large",
+                "size_huge": "Huge",
+                "print_error_title": "Print Error",
+                "print_error_message": "Could not print: {}",
+                "print_success_toast": "Document sent to the printer"
             },
             "pt": {
                 "window_title": "GNOME-Sign", "open_pdf": "Abrir PDF...", "prev_page": "Página anterior", "next_page": "Página seguinte",
@@ -198,7 +220,18 @@ class I18NManager:
                 "prev_result_tooltip": "Resultado anterior",
                 "next_result_tooltip": "Resultado seguinte",
                 "print_document": "Imprimir documento...",
-                "show_signatures_menu_item": "Mostrar assinaturas"
+                "show_signatures_menu_item": "Mostrar assinaturas",
+                "template": "Modelo",
+                "template_content": "Conteúdo do modelo (marcação Pango)",
+                "font": "Tipo de letra",
+                "size": "Tamanho",
+                "size_small": "Pequeno",
+                "size_normal": "Normal",
+                "size_large": "Grande",
+                "size_huge": "Enorme",
+                "print_error_title": "Erro de impressão",
+                "print_error_message": "Não foi possível imprimir: {}",
+                "print_success_toast": "Documento enviado para a impressora"
             }
         }
 

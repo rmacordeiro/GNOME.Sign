@@ -25,3 +25,15 @@ def test_stamp_markup_is_escaped():
     html = pango_to_html('<span color="red;}<script>">a &lt;b&gt; &amp; c</span>')
     assert "<script>" not in html
     assert "a &lt;b&gt; &amp; c" in html
+
+
+def test_every_used_translation_key_exists():
+    import re
+    from pathlib import Path
+
+    src = Path(__file__).resolve().parent.parent / "src"
+    used = set()
+    for path in src.rglob("*.py"):
+        used |= set(re.findall(r"""\b_\(\s*["']([a-z0-9_]+)["']\s*\)""", path.read_text()))
+    missing = used - set(I18NManager().translations["en"])
+    assert not missing, sorted(missing)
