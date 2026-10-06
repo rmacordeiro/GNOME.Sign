@@ -2,6 +2,7 @@
 import gi
 gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio, GLib
+from i18n import SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE
 from datetime import datetime, timezone, timedelta
 import os
 
@@ -45,12 +46,12 @@ class PreferencesWindow(Adw.PreferencesWindow):
         self.lang_group = Adw.PreferencesGroup.new()
         self.page_general.add(self.lang_group)
         
-        self.language_codes = ["es", "en", "pt"]
-        model = Gtk.StringList.new(["Español", "English", "Português"])
+        self.language_codes = list(SUPPORTED_LANGUAGES)
+        model = Gtk.StringList.new(list(SUPPORTED_LANGUAGES.values()))
         self.lang_row = Adw.ComboRow.new()
         self.lang_row.set_model(model)
         current_lang_code = self.i18n.get_language()
-        self.lang_row.set_selected(self.language_codes.index(current_lang_code) if current_lang_code in self.language_codes else 1)
+        self.lang_row.set_selected(self.language_codes.index(current_lang_code if current_lang_code in self.language_codes else DEFAULT_LANGUAGE))
         self.lang_row.connect("notify::selected", self._on_language_changed_selection)
         self.lang_group.add(self.lang_row)
 

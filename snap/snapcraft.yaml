@@ -1,6 +1,6 @@
 name: gnome-sign
 base: core24
-version: '1.0.2'
+version: '1.0.3'
 summary: Sign PDF documents with digital certificates
 description: |
   GNOME-Sign is a GTK4/libadwaita desktop application for viewing,
@@ -36,9 +36,8 @@ parts:
   python-deps:
     plugin: python
     source: .
-    python-packages:
-      - pyhanko
-      - PyMuPDF>=1.24.0
+    python-requirements:
+      - debian/requirements-venv.txt
 
   # 2. Update your main application part
   gnome-sign:

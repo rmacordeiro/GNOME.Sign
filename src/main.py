@@ -6,6 +6,7 @@ gi.require_version("Adw", "1")
 gi.require_version("Secret", "1")
 from gi.repository import Gtk, Adw, Gio, Secret, GLib, GObject
 import pymupdf, sys, os, re
+from functools import lru_cache
 from datetime import datetime, timezone, timedelta
 from cryptography import x509
 from io import BytesIO
@@ -20,6 +21,7 @@ from pyhanko.keys.internal import (
 )
 from pyhanko_certvalidator import ValidationContext
 from pyhanko_certvalidator.registry import SimpleCertificateStore
+from asn1crypto import pem, x509 as asn1_x509
 from pyhanko.pdf_utils.generic import ArrayObject
 
 from i18n import I18NManager
@@ -30,6 +32,38 @@ from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
 from stamp_creator import HtmlStamp, pango_to_html
 from pyhanko.stamp import StaticStampStyle
+
+SYSTEM_CA_BUNDLES = ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt")
+
+
+@lru_cache(maxsize=1)
+def load_system_trust_roots():
+    """Loads the system CA bundle (falling back to certifi) as trust roots for signature validation."""
+    paths = list(SYSTEM_CA_BUNDLES)
+    try:
+        import certifi
+        paths.append(certifi.where())
+    except ImportError:
+        pass
+    for path in paths:
+        try:
+            with open(path, 'rb') as f:
+                return tuple(asn1_x509.Certificate.load(der) for _, _, der in pem.unarmor(f.read(), multiple=True))
+        except (OSError, ValueError):
+            continue
+    return ()
+
+
+def flatten_page_tree(node, reference=None):
+    """Returns the references of the leaf pages of a (possibly nested) PDF page tree, in document order."""
+    kids = node.get('/Kids')
+    if kids is None:
+        return [reference]
+    pages = []
+    for i in range(len(kids)):
+        pages.extend(flatten_page_tree(kids[i], getattr(kids.raw_get(i), 'reference', None)))
+    return pages
+
 
 class SearchResult:
     """A data class to hold information about a single text search result."""
@@ -233,17 +267,18 @@ class GnomeSign(Adw.Application):
             try:
                 with open(file_path, 'rb') as f:
                     reader = PdfFileReader(f, strict=False)
-                    validation_context = ValidationContext(allow_fetching=True) 
-                    pages = list(reader.root['/Pages']['/Kids'])
+                    # Never fetch revocation/AIA data: URLs come from the untrusted PDF.
+                    validation_context = ValidationContext(trust_roots=load_system_trust_roots(), allow_fetching=False)
+                    pages = flatten_page_tree(reader.root['/Pages'])
                     for sig in reader.embedded_signatures:
                         try:
-                            page_ref = sig.sig_field.get('/P')
+                            page_ref = sig.sig_field.raw_get('/P').reference
                             page_num = pages.index(page_ref)
                             rect = [float(v) for v in sig.sig_field.get('/Rect', [])]
-                            status = validate_pdf_signature(sig, validation_context, skip_diff=True)
+                            status = validate_pdf_signature(sig, validation_context)
                             self.signatures.append(SignatureDetails(sig, status, page_num, rect))
                         except (ValueError, KeyError, IndexError):
-                            status = validate_pdf_signature(sig, validation_context, skip_diff=True)
+                            status = validate_pdf_signature(sig, validation_context)
                             self.signatures.append(SignatureDetails(sig, status, -1, None))
             except Exception as e:
                 print(f"Could not analyze for signatures: {e}")
@@ -501,7 +536,7 @@ class GnomeSign(Adw.Application):
         else:
             try:
                 output_path = self._generate_output_path(self.current_file_path)
-                with open(output_path, "wb") as out_f:
+                with open(output_path, "xb") as out_f:
                     out_f.write(signed_bytes)
                 
                 self.emit("toast-request", self._("sign_success_message").format(os.path.basename(output_path)), self._("open"), lambda: self.open_file_path(output_path, show_toast=False))

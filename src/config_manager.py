@@ -4,6 +4,7 @@ import json
 import uuid
 from collections import deque
 from gi.repository import GLib
+from i18n import DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES
 
 class ConfigManager:
     """Manages loading, saving, and accessing application configuration settings."""
@@ -30,12 +31,14 @@ class ConfigManager:
         defaults = {
             'certificates': [], 'recent_files': [], 'signature_templates': [],
             'active_template_id': None, 'last_folder': os.path.expanduser("~"),
-            'language': "en", 'active_cert_path': None,
+            'language': DEFAULT_LANGUAGE, 'active_cert_path': None,
             'signature_reason': '', 
             'signature_location': '' 
         }
         for key, value in defaults.items():
             self.config_data.setdefault(key, value)
+        if self.config_data['language'] not in SUPPORTED_LANGUAGES:
+            self.config_data['language'] = DEFAULT_LANGUAGE
         self._create_default_templates_if_needed()
 
     def _create_default_templates_if_needed(self):
@@ -146,7 +149,7 @@ class ConfigManager:
 
     def get_language(self):
         """Returns the current language code (e.g., 'es' or 'en')."""
-        return self.config_data.get("language", "es")
+        return self.config_data.get("language", DEFAULT_LANGUAGE)
 
     def set_language(self, lang_code):
         """Sets the application language."""
