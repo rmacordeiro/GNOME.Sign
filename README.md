@@ -108,3 +108,7 @@ This project is licensed under the terms of the GNU Affero General Public Licens
 Dependencies are declared in `pyproject.toml` and locked with hashes in `requirements.lock`. After changing them, run `uv pip compile pyproject.toml --universal --python-version 3.12 --generate-hashes --no-header -o requirements.lock` followed by `scripts/sync-deps.py` to regenerate `requirements.txt`, `debian/requirements-venv.txt` and the Flatpak `python-modules.json`.
 
 Quality checks (also run in CI): `pytest`, `ruff check .`, `mypy`, `pip-audit -r requirements.lock --no-deps`.
+
+### Code layout
+
+`src/main.py` and `src/ui/` hold the GTK/libadwaita layer. GTK-free logic lives in `src/services/` (`signing_service`, `validation_service`, `document_service`, `tasks`) and `src/models.py`, so signing, validation and search are unit-tested without a display. Signature validation, text search and thumbnail rendering run off the UI thread.

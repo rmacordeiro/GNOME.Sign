@@ -4,6 +4,7 @@ import gi
 gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1"); gi.require_version("PangoCairo", "1.0"); gi.require_version('GdkPixbuf', '2.0'); gi.require_version('Secret', '1')
 from gi.repository import Gtk, Adw, Gdk, Gio, GLib, GdkPixbuf, Secret, GObject
 import os, pymupdf
+from stamp_creator import HtmlStamp, pango_to_html
 
 class AppWindow(Adw.ApplicationWindow):
     """The main application window, containing the header bar, sidebar, and content area."""
@@ -16,6 +17,9 @@ class AppWindow(Adw.ApplicationWindow):
         self.popover_active_for_sig = None
         self.signature_view_rects = []
         self.search_highlights = []
+        self._search_debounce_id = 0
+        self._stamp_preview_cache = {}
+        self._preview_cert, self._preview_cert_path = None, None
         self.set_default_size(900, 700); self.set_icon_name("io.github.ppgllrd.GNOME-Sign")
         self.set_hide_on_close(False)
         self._build_ui(Sidebar, WelcomeView); self._connect_signals()
@@ -206,15 +210,24 @@ class AppWindow(Adw.ApplicationWindow):
             self.prev_search_button.set_sensitive(app.current_search_result_index > 0)
             self.next_search_button.set_sensitive(app.current_search_result_index < num_results - 1)
 
+    SEARCH_DEBOUNCE_MS = 300
+
     def _on_search_changed(self, entry):
-        """Handles the 'search-changed' signal from the search entry."""
-        app = self.get_application()
+        """Debounces the search entry so only the last query in a burst of typing is executed."""
+        if self._search_debounce_id:
+            GLib.source_remove(self._search_debounce_id)
+            self._search_debounce_id = 0
         text = entry.get_text().strip()
+        app = self.get_application()
         if len(text) > 2:
-            app.search_text(text)
-        else:
-            if hasattr(app, 'clear_search'):
-                app.clear_search()
+            self._search_debounce_id = GLib.timeout_add(self.SEARCH_DEBOUNCE_MS, self._run_search, text)
+        elif hasattr(app, 'clear_search'):
+            app.clear_search()
+
+    def _run_search(self, text):
+        self._search_debounce_id = 0
+        self.get_application().search_text(text)
+        return GLib.SOURCE_REMOVE
 
     def _on_document_changed(self, app, doc):
         """Handles the 'document-changed' signal, updating the main view."""
@@ -264,6 +277,9 @@ class AppWindow(Adw.ApplicationWindow):
         """Handles the 'signatures-found' signal, showing the info banner."""
         self.show_signature_info(len(signatures))
         self.show_sigs_button.set_visible(bool(signatures))
+        self.sidebar.populate_signatures(signatures)
+        self._update_signature_view_rects()
+        self.drawing_area.queue_draw()
     
     def _on_toast_request(self, app, message, button_label, callback_func):
         """Handles the 'toast-request' signal."""
@@ -285,6 +301,7 @@ class AppWindow(Adw.ApplicationWindow):
     
     def _on_certificates_changed(self, app):
         """Handles the 'certificates-changed' signal."""
+        self.invalidate_stamp_preview()
         self._update_certs_button_tooltip()
         self._on_signature_state_changed(app)
 
@@ -436,16 +453,35 @@ class AppWindow(Adw.ApplicationWindow):
             x, y, w, h = rect_to_draw
             if w < 5 or h < 5: cr.set_source_rgba(0.0, 0.5, 0.0, 0.5); cr.rectangle(x, y, w, h); cr.fill(); return
             cr.set_source_rgb(0.0, 0.5, 0.0); cr.set_line_width(1.5); cr.rectangle(x, y, w, h); cr.stroke_preserve(); cr.set_source_rgba(1.0, 1.0, 1.0, 0.8); cr.fill()
-            if w > 20 and h > 20 and app.active_cert_path:
-                if password := Secret.password_lookup_sync(app.cert_manager.KEYRING_SCHEMA, {"path": app.active_cert_path}, None):
-                        _, certificate_pyca = app.cert_manager.get_credentials(app.active_cert_path, password)
-                        if certificate_pyca: 
-                            from stamp_creator import HtmlStamp, pango_to_html
-                            parsed_pango_text = app.get_parsed_stamp_text(certificate_pyca)
-                            html_content = pango_to_html(parsed_pango_text)
-                            scale = app.page.rect.width / self.drawing_area.get_width() if self.drawing_area.get_width() > 0 else 1
-                            stamp_creator = HtmlStamp(html_content=html_content, width=w * scale, height=h * scale)
-                            if stamp_pixbuf := stamp_creator.get_pixbuf(int(w), int(h)): Gdk.cairo_set_source_pixbuf(cr, stamp_pixbuf, x, y); cr.paint()
+            if w > 20 and h > 20 and app.signature_rect and app.active_cert_path:
+                if stamp_pixbuf := self._get_stamp_preview(app, int(w), int(h)):
+                    Gdk.cairo_set_source_pixbuf(cr, stamp_pixbuf, x, y); cr.paint()
+
+    def _get_stamp_preview(self, app, w, h):
+        """Returns the (cached) stamp preview; the keyring, certificate and HTML rendering are skipped on cache hits."""
+        view_width = self.drawing_area.get_width()
+        template = app.config.get_active_template() or {}
+        key = (app.active_cert_path, template.get("template", template.get("template_es", "")), w, h, view_width)
+        if key in self._stamp_preview_cache:
+            return self._stamp_preview_cache[key]
+        if self._preview_cert_path != app.active_cert_path:
+            self._preview_cert = None
+            if password := Secret.password_lookup_sync(app.cert_manager.KEYRING_SCHEMA, {"path": app.active_cert_path}, None):
+                self._preview_cert = app.cert_manager.get_credentials(app.active_cert_path, password)[1]
+            self._preview_cert_path = app.active_cert_path
+        if not self._preview_cert:
+            return None
+        scale = app.page.rect.width / view_width if view_width > 0 else 1
+        html_content = pango_to_html(app.get_parsed_stamp_text(self._preview_cert))
+        pixbuf = HtmlStamp(html_content=html_content, width=w * scale, height=h * scale).get_pixbuf(w, h)
+        if len(self._stamp_preview_cache) >= 16:
+            self._stamp_preview_cache.clear()
+        self._stamp_preview_cache[key] = pixbuf
+        return pixbuf
+
+    def invalidate_stamp_preview(self):
+        self._stamp_preview_cache.clear()
+        self._preview_cert, self._preview_cert_path = None, None
 
     def _on_toast_dismissed(self, toast):
         """Callback for a toast's 'dismissed' signal."""

@@ -1,3 +1,13 @@
+gnome-sign (1.0.5-1) unstable; urgency=medium
+
+  * Run signature validation, text search and thumbnail rendering off the UI
+    thread; debounce and cancel searches.
+  * Cache the signature stamp preview.
+  * Split signing, validation and search logic into GTK-free services.
+  * Add signing, validation and large-document tests.
+
+ -- GNOME-Sign Maintainers <packages@users.noreply.github.com>  Tue, 06 Oct 2026 13:30:00 +0000
+
 gnome-sign (1.0.4-1) unstable; urgency=medium
 
   * Fix deleting stamp templates (missing application method); the active
