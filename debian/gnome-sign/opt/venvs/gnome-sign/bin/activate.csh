@@ -13,13 +13,13 @@ setenv VIRTUAL_ENV "/opt/venvs/gnome-sign"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/"bin":$PATH"
+setenv VIRTUAL_ENV "/opt/venvs/gnome-sign"
 
 
 set _OLD_VIRTUAL_PROMPT="$prompt"
 
 if (! "$?VIRTUAL_ENV_DISABLE_PROMPT") then
-    set prompt = '(gnome-sign) '"$prompt"
-    setenv VIRTUAL_ENV_PROMPT '(gnome-sign) '
+    set prompt = "("gnome-sign") $prompt:q"
 endif
 
 alias pydoc python -m pydoc

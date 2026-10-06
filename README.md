@@ -11,6 +11,7 @@ GNOME-Sign is a simple and easy-to-use application for signing PDF documents wit
 *   **Text Search**: Search for text within the document, with results highlighted and displayed in the sidebar.
 *   **Printing**: Print PDF documents using the system's native print dialog.
 *   **Recent Files**: Quickly access your recently opened files.
+*   **Translations**: The interface is available in English, Spanish, and Portuguese.
 
 ## Build and Packaging
 
