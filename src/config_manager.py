@@ -116,8 +116,17 @@ class ConfigManager:
         templates.append(template_data)
 
     def delete_template(self, template_id):
-        """Deletes a signature template by its ID."""
-        self.config_data['signature_templates'] = [t for t in self.get_signature_templates() if t.get('id') != template_id]
+        """Deletes a signature template by its ID, keeping the active template valid.
+
+        The last remaining template is never deleted. Returns True if a template was removed.
+        """
+        templates = self.get_signature_templates()
+        if len(templates) <= 1 or not any(t.get('id') == template_id for t in templates):
+            return False
+        self.config_data['signature_templates'] = [t for t in templates if t.get('id') != template_id]
+        if self.get_active_template_id() == template_id or self.get_active_template() is None:
+            self.set_active_template_id(self.config_data['signature_templates'][0]['id'])
+        return True
 
     def get_active_template_id(self):
         """Returns the ID of the currently active signature template."""

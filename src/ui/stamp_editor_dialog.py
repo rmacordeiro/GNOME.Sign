@@ -2,7 +2,7 @@
 import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Pango, PangoCairo, Secret, Gdk
+from gi.repository import Gtk, Pango, PangoCairo, Secret
 import uuid
 import re
 from certificate_manager import KEYRING_SCHEMA

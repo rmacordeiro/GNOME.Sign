@@ -190,7 +190,6 @@ class Sidebar(Gtk.Box):
 
     def populate_search_results(self, results):
         """Fills the search results list with individual results and context."""
-        app = self.get_ancestor(Adw.ApplicationWindow).get_application()
         self.block_signal = True
         while (row := self.search_listbox.get_row_at_index(0)): self.search_listbox.remove(row)
 

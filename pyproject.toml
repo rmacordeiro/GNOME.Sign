@@ -1,0 +1,42 @@
+[project]
+name = "gnome-sign"
+version = "1.0.4"
+description = "Sign PDF documents with digital certificates"
+readme = "README.md"
+license = { text = "AGPL-3.0-or-later" }
+requires-python = ">=3.12"
+# Exact pins: every package format (Flatpak, Snap, Debian) installs the locked set in requirements.lock.
+# PyGObject/pycairo are provided by the system or the GNOME runtime and are intentionally not listed.
+dependencies = [
+    "pyhanko==0.29.1",
+    "pyhanko-certvalidator==0.27.0",
+    "PyMuPDF==1.26.3",
+    "cryptography>=45",
+    "asn1crypto>=1.5",
+    "certifi",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "pip-audit>=2.7",
+]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+extend-exclude = ["debian", "obj-x86_64-linux-gnu", "packages"]
+
+[tool.ruff.lint]
+select = ["E9", "F", "B006", "B008", "UP031"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+files = ["src/i18n.py", "src/config_manager.py", "src/stamp_creator.py", "src/certificate_manager.py"]

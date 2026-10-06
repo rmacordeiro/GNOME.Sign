@@ -1,10 +1,9 @@
 # ui/preferences_window.py
 import gi
 gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, GLib
+from gi.repository import Gtk, Adw, GLib
 from i18n import SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE
 from datetime import datetime, timezone, timedelta
-import os
 
 class PreferencesWindow(Adw.PreferencesWindow):
     """A window for managing application preferences, including language and certificates."""

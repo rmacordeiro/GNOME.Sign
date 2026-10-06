@@ -4,7 +4,7 @@
 APP_ID="io.github.ppgllrd.GNOME-Sign"
 
 echo "--- Generating modules ---"
-req2flatpak --requirements-file requirements.txt --target-platforms 312-x86_64 312-aarch64 > python-modules.json
+scripts/sync-deps.py
 
 # clean previous builts
 echo "--- Cleaninng previous compilations ---"

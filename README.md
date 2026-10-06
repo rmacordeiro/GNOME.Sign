@@ -69,7 +69,7 @@ If you prefer to run the application directly from the source tree, install the 
 ### Python dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt   # exact, locked runtime versions (generated from pyproject.toml)
 ```
 
 ### System dependencies
@@ -102,3 +102,9 @@ If you enjoy this application, consider buying me a tea 🍵 (I’m not really a
 ## License
 
 This project is licensed under the terms of the GNU Affero General Public License v3.0 or later. See the [LICENSE](LICENSE) file for more details.
+
+## Development
+
+Dependencies are declared in `pyproject.toml` and locked with hashes in `requirements.lock`. After changing them, run `uv pip compile pyproject.toml --universal --python-version 3.12 --generate-hashes --no-header -o requirements.lock` followed by `scripts/sync-deps.py` to regenerate `requirements.txt`, `debian/requirements-venv.txt` and the Flatpak `python-modules.json`.
+
+Quality checks (also run in CI): `pytest`, `ruff check .`, `mypy`, `pip-audit -r requirements.lock --no-deps`.

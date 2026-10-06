@@ -1,6 +1,6 @@
 project(
   'gnome-sign',
-  version: '1.0.3',
+  version: '1.0.4',
   meson_version: '>= 0.61.0'
 )
 
@@ -33,6 +33,7 @@ root_sources = files(
   'src/config_manager.py',
   'src/i18n.py',
   'src/main.py',
+  'src/paths.py',
   'src/runtime.py',
   'src/stamp_creator.py'
 )
