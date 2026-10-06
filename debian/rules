@@ -6,4 +6,4 @@
 # Instruct dh-virtualenv to inject extra wheels from PyPI during package assembly
 override_dh_virtualenv:
 	dh_auto_install --destdir=debian/gnome-sign
-	dh_virtualenv --python python3 --requirements debian/requirements-venv.txt --builtin-venv --skip-install
+	dh_virtualenv --python python3 --requirements debian/requirements-venv.txt --extra-pip-arg=--require-hashes --builtin-venv --skip-install

@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+obj-*/
+.flatpak-builder/
+build-dir/
+builddir/
+debian/.debhelper/
+debian/gnome-sign/
+debian/*.debhelper
+debian/*.substvars
+debian/debhelper-build-stamp
+debian/files
+packages/
+*.deb
+*.snap
+*.flatpak
+debian/*.log

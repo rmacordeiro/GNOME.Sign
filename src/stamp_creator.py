@@ -1,6 +1,7 @@
 # stamp_creator.py
 import pymupdf
 import re
+import html
 from io import BytesIO
 from pyhanko.stamp import StaticStampStyle
 from html.parser import HTMLParser
@@ -29,6 +30,11 @@ class PangoToHtmlConverter(HTMLParser):
         super().__init__(); self.html_parts = []; self.style_stack = [{}]
         self.font_map = {'sans': 'sans-serif', 'serif': 'serif', 'mono': 'monospace'}
         self.size_map = {'small': '8pt', 'normal': '10pt', 'large': '13pt', 'x-large': '16pt'}
+    @staticmethod
+    def _safe_css(value) -> str:
+        """Strips characters that could break out of a CSS declaration."""
+        return re.sub(r'[;{}<>"\'\\]', '', str(value))
+
     def get_current_styles(self) -> dict: return self.style_stack[-1]
     
     def handle_starttag(self, tag, attrs):
@@ -65,8 +71,8 @@ class PangoToHtmlConverter(HTMLParser):
         if len(self.style_stack) > 1: self.style_stack.pop()
     def handle_data(self, data):
         if not data.strip(): self.html_parts.append(data); return
-        styles = self.get_current_styles(); escaped_data = data.replace('"', '&quot;').replace("'", '&#39;')
-        if styles: style_str = "; ".join(f"{k}: {v}" for k, v in styles.items()); self.html_parts.append(f'<span style="{style_str}">{escaped_data}</span>')
+        styles = self.get_current_styles(); escaped_data = html.escape(data, quote=True)
+        if styles: style_str = html.escape("; ".join(f"{k}: {self._safe_css(v)}" for k, v in styles.items()), quote=True); self.html_parts.append(f'<span style="{style_str}">{escaped_data}</span>')
         else: self.html_parts.append(escaped_data)
     def get_html(self) -> str: return "".join(self.html_parts).replace('\n', '<br/>')
 
