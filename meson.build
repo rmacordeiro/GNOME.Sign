@@ -1,6 +1,6 @@
 project(
   'gnome-sign',
-  version: '1.0.4',
+  version: '1.0.5',
   meson_version: '>= 0.61.0'
 )
 
@@ -35,6 +35,7 @@ root_sources = files(
   'src/main.py',
   'src/paths.py',
   'src/runtime.py',
+  'src/models.py',
   'src/stamp_creator.py'
 )
 
@@ -48,6 +49,13 @@ ui_sources = files(
 ui_component_sources = files(
   'src/ui/components/sidebar.py',
   'src/ui/components/welcome.py'
+)
+
+service_sources = files(
+  'src/services/document_service.py',
+  'src/services/signing_service.py',
+  'src/services/tasks.py',
+  'src/services/validation_service.py'
 )
 
 install_data(
@@ -64,6 +72,7 @@ install_data(
 
 install_data(root_sources, install_dir: pkgdatadir)
 install_data(ui_sources, install_dir: join_paths(pkgdatadir, 'ui'))
+install_data(service_sources, install_dir: join_paths(pkgdatadir, 'services'))
 install_data(ui_component_sources, install_dir: join_paths(pkgdatadir, 'ui', 'components'))
 
 install_data(

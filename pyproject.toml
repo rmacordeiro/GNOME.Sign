@@ -1,6 +1,6 @@
 [project]
 name = "gnome-sign"
-version = "1.0.4"
+version = "1.0.5"
 description = "Sign PDF documents with digital certificates"
 readme = "README.md"
 license = { text = "AGPL-3.0-or-later" }
@@ -39,4 +39,4 @@ pythonpath = ["src"]
 [tool.mypy]
 python_version = "3.12"
 ignore_missing_imports = true
-files = ["src/i18n.py", "src/config_manager.py", "src/stamp_creator.py", "src/certificate_manager.py"]
+files = ["src/i18n.py", "src/config_manager.py", "src/stamp_creator.py", "src/certificate_manager.py", "src/paths.py", "src/models.py", "src/services"]

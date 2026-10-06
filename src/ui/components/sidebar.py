@@ -3,7 +3,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk, GdkPixbuf, GLib, GObject, Adw
-import pymupdf
+from services.document_service import render_thumbnail_png
 
 THUMBNAIL_WIDTH = 150
 
@@ -21,6 +21,9 @@ class Sidebar(Gtk.Box):
         """Initializes the sidebar widget with a vertical Box layout."""
         super().__init__(orientation=Gtk.Orientation.VERTICAL, **kwargs)
         
+        self._thumbnail_generation = 0
+        self._thumbnail_queue = []
+
         # --- Main View Stack ---
         self.stack = Gtk.Stack()
         self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
@@ -89,6 +92,7 @@ class Sidebar(Gtk.Box):
         while (row := self.pages_listbox.get_row_at_index(0)): self.pages_listbox.remove(row)
         while (row := self.signatures_listbox.get_row_at_index(0)): self.signatures_listbox.remove(row)
         while (row := self.search_listbox.get_row_at_index(0)): self.search_listbox.remove(row)
+        self._thumbnail_generation += 1
         self.search_button.set_visible(False)
 
         if not doc: 
@@ -97,20 +101,16 @@ class Sidebar(Gtk.Box):
         
         self.set_visible(True)
 
-        # Populate page thumbnails
+        self._thumbnail_generation += 1
+        self._thumbnail_queue = []
         for page_num in range(len(doc)):
-            row = Gtk.ListBoxRow()
-            page = doc.load_page(page_num)
-            page_rect = page.rect
+            page_rect = doc.load_page(page_num).rect
             if page_rect.width == 0: continue
             zoom = THUMBNAIL_WIDTH / page_rect.width
-            matrix = pymupdf.Matrix(zoom, zoom)
-            thumbnail_height = page_rect.height * zoom
-            pix = page.get_pixmap(matrix=matrix, alpha=False)
-            pixbuf = GdkPixbuf.Pixbuf.new_from_bytes(GLib.Bytes.new(pix.samples), GdkPixbuf.Colorspace.RGB, False, 8, pix.width, pix.height, pix.stride)
-            picture = Gtk.Picture.new_for_pixbuf(pixbuf)
+            row = Gtk.ListBoxRow()
+            picture = Gtk.Picture()
             picture.set_content_fit(Gtk.ContentFit.CONTAIN)
-            picture.set_size_request(THUMBNAIL_WIDTH, thumbnail_height)
+            picture.set_size_request(THUMBNAIL_WIDTH, int(page_rect.height * zoom))
             label = Gtk.Label.new(str(page_num + 1))
             item_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
             item_box.set_size_request(THUMBNAIL_WIDTH, -1)
@@ -123,8 +123,19 @@ class Sidebar(Gtk.Box):
             item_box.append(label)
             row.set_child(item_box)
             self.pages_listbox.append(row)
+            self._thumbnail_queue.append((page_num, picture))
+        self._thumbnail_queue.reverse()
+        GLib.idle_add(self._render_next_thumbnail, self._thumbnail_generation, doc.name)
 
-        # Populate signatures and control switcher visibility
+        self.populate_signatures(signatures)
+
+        # Always default to showing pages, and ensure the button is active
+        self.pages_button.set_active(True)
+        self.stack.set_visible_child_name("pages")
+            
+    def populate_signatures(self, signatures):
+        """Fills the signatures pane; may be called again once background validation finishes."""
+        while (row := self.signatures_listbox.get_row_at_index(0)): self.signatures_listbox.remove(row)
         if signatures:
             self.signatures_button.set_visible(True)
             for sig in signatures:
@@ -141,10 +152,20 @@ class Sidebar(Gtk.Box):
         else: 
             self.signatures_button.set_visible(False)
 
-        # Always default to showing pages, and ensure the button is active
-        self.pages_button.set_active(True)
-        self.stack.set_visible_child_name("pages")
-            
+    def _render_next_thumbnail(self, generation, path):
+        """Renders one thumbnail per idle tick (own file handle, so it never races the viewer); stops if the document changed."""
+        if generation != self._thumbnail_generation or not self._thumbnail_queue:
+            return GLib.SOURCE_REMOVE
+        page_num, picture = self._thumbnail_queue.pop()
+        try:
+            png = render_thumbnail_png(path, page_num, THUMBNAIL_WIDTH)
+            loader = GdkPixbuf.PixbufLoader.new_with_type("png")
+            loader.write(png); loader.close()
+            picture.set_pixbuf(loader.get_pixbuf())
+        except Exception as e:
+            print(f"Could not render thumbnail for page {page_num + 1}: {e}")
+        return GLib.SOURCE_CONTINUE
+
     def select_page(self, page_num):
         """Programmatically selects a specific page in the thumbnail list and ensures it is visible."""
         # Ensure the pages view is visible before selecting

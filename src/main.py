@@ -5,23 +5,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Secret", "1")
 from gi.repository import Gtk, Adw, Gio, Secret, GLib, GObject
-import pymupdf, sys, os, re
-from functools import lru_cache
-from datetime import datetime
-from cryptography import x509
-from io import BytesIO
-from pyhanko.pdf_utils.reader import PdfFileReader
-from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from pyhanko.sign import signers, fields
-from pyhanko.sign.validation import validate_pdf_signature
-from pyhanko.sign.signers.pdf_signer import PdfSigner, PdfSignatureMetadata
-from pyhanko.keys.internal import (
-    translate_pyca_cryptography_key_to_asn1,
-    translate_pyca_cryptography_cert_to_asn1
-)
-from pyhanko_certvalidator import ValidationContext
-from pyhanko_certvalidator.registry import SimpleCertificateStore
-from asn1crypto import pem, x509 as asn1_x509
+import pymupdf, sys, os
 
 from i18n import I18NManager
 from runtime import is_sandboxed_runtime
@@ -30,99 +14,10 @@ from config_manager import ConfigManager
 from paths import generate_output_path
 from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
-from stamp_creator import HtmlStamp, pango_to_html
-
-SYSTEM_CA_BUNDLES = ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt")
-
-
-@lru_cache(maxsize=1)
-def load_system_trust_roots():
-    """Loads the system CA bundle (falling back to certifi) as trust roots for signature validation."""
-    paths = list(SYSTEM_CA_BUNDLES)
-    try:
-        import certifi
-        paths.append(certifi.where())
-    except ImportError:
-        pass
-    for path in paths:
-        try:
-            with open(path, 'rb') as f:
-                return tuple(asn1_x509.Certificate.load(der) for _, _, der in pem.unarmor(f.read(), multiple=True))
-        except (OSError, ValueError):
-            continue
-    return ()
-
-
-def flatten_page_tree(node, reference=None):
-    """Returns the references of the leaf pages of a (possibly nested) PDF page tree, in document order."""
-    kids = node.get('/Kids')
-    if kids is None:
-        return [reference]
-    pages = []
-    for i in range(len(kids)):
-        pages.extend(flatten_page_tree(kids[i], getattr(kids.raw_get(i), 'reference', None)))
-    return pages
-
-
-class SearchResult:
-    """A data class to hold information about a single text search result."""
-    def __init__(self, page_num, rect, context):
-        self.page_num = page_num
-        self.rect = rect
-        self.context = context
-
-class SignatureDetails:
-    """A data class to hold processed information about a digital signature."""
-    def __init__(self, pyhanko_sig, validation_status, page_num, rect):
-        """Initializes the signature details from pyHanko objects."""
-        self.pyhanko_sig = pyhanko_sig
-        self.status = validation_status
-        self.intact = validation_status.intact
-        self.valid = validation_status.valid
-        self.trusted = validation_status.trusted
-        self.revoked = validation_status.revoked
-        self.valid = validation_status.bottom_line
-        self.signer_name = "Unknown"
-        self.sign_time = None
-        self.issuer_cn = "Unknown"
-        self.serial = "Unknown"
-        self.page_num = page_num
-        self.rect = rect
-        
-        sig_obj = pyhanko_sig.sig_object
-        self.reason = str(sig_obj.get('/Reason', ''))
-        self.location = str(sig_obj.get('/Location', ''))
-        self.contact_info = str(sig_obj.get('/ContactInfo', ''))
-       
-        cert = getattr(validation_status, 'signer_cert', None)
-        if not cert:
-            cert = pyhanko_sig.signer_cert
-        def get_cn_from_name(name_obj):
-            if not name_obj: return "N/A"
-            try:
-                native_dict = name_obj.native
-                return native_dict.get('common_name', str(name_obj))
-            except Exception: return str(name_obj)
-        if cert:
-            try:
-                self.signer_name = get_cn_from_name(cert.subject)
-                self.issuer_cn = get_cn_from_name(cert.issuer)
-                self.serial = str(cert.serial_number)
-            except Exception as e:
-                print(f"Error parsing certificate details: {e}")
-                self.signer_name = str(cert.subject) if cert.subject else "Parsing Error"
-                self.issuer_cn = str(cert.issuer) if cert.issuer else "Parsing Error"
-        self.sign_time = None
-        try:
-            signed_attrs = self.pyhanko_sig.signer_info['signed_attrs']
-            for attr in signed_attrs:
-                if attr['type'].native == 'signing_time':
-                    self.sign_time = attr['values'][0].native
-                    break
-        except (KeyError, AttributeError, IndexError, TypeError):
-            pass
-        if not self.sign_time and validation_status.timestamp_validity:
-            self.sign_time = validation_status.timestamp_validity.timestamp
+from services.document_service import search_document
+from services.tasks import run_in_thread
+from services.signing_service import parse_stamp_text, sign_pdf
+from services.validation_service import analyze_signatures
 
 class GnomeSign(Adw.Application):
     """The main application class, managing state and high-level logic."""
@@ -153,6 +48,8 @@ class GnomeSign(Adw.Application):
         self.highlight_rect = None
         self.window, self.preferences_window = None, None
         self.signatures = []
+        self._analysis_token = None
+        self._search_token = None
         self.search_results = []
         self.search_highlights_on_page = []
         self.current_search_result_index = -1
@@ -261,41 +158,45 @@ class GnomeSign(Adw.Application):
             if not os.path.exists(file_path): raise FileNotFoundError(f"File not found: {file_path}")
             if self.doc: self.doc.close()
             
+            self._cancel_background_work()
             self.clear_search()
             self.signatures = []
-            try:
-                with open(file_path, 'rb') as f:
-                    reader = PdfFileReader(f, strict=False)
-                    # Never fetch revocation/AIA data: URLs come from the untrusted PDF.
-                    validation_context = ValidationContext(trust_roots=load_system_trust_roots(), allow_fetching=False)
-                    pages = flatten_page_tree(reader.root['/Pages'])
-                    for sig in reader.embedded_signatures:
-                        try:
-                            page_ref = sig.sig_field.raw_get('/P').reference
-                            page_num = pages.index(page_ref)
-                            rect = [float(v) for v in sig.sig_field.get('/Rect', [])]
-                            status = validate_pdf_signature(sig, validation_context)
-                            self.signatures.append(SignatureDetails(sig, status, page_num, rect))
-                        except (ValueError, KeyError, IndexError):
-                            status = validate_pdf_signature(sig, validation_context)
-                            self.signatures.append(SignatureDetails(sig, status, -1, None))
-            except Exception as e:
-                print(f"Could not analyze for signatures: {e}")
 
             self.current_file_path = file_path; self.doc = pymupdf.open(file_path); self.current_page = 0
             self.config.add_recent_file(file_path); self.config.set_last_folder(os.path.dirname(file_path))
-            
-            self.emit("document-changed", self.doc)
-            if self.signatures: self.emit("signatures-found", self.signatures)
-            elif self.active_cert_path and show_toast: self.emit("toast-request", self._("toast_select_area"), None, None)
 
+            self.emit("document-changed", self.doc)
             self.reset_signature_state(); self.display_page(0)
             self._update_actions_state()
-            
+            self._start_signature_analysis(file_path, show_toast)
+
         except Exception as e:
             show_error_dialog(self.window, self._("error"), self._("open_pdf_error").format(e))
             self.doc = None; self.signatures = []
             self.emit("document-changed", None)
+
+    def _cancel_background_work(self):
+        for token in (self._analysis_token, self._search_token):
+            if token:
+                token.cancel()
+        self._analysis_token = self._search_token = None
+
+    def _start_signature_analysis(self, file_path, show_toast):
+        """Validates signatures in a worker thread so large or heavily signed PDFs don't block the UI."""
+        def on_done(signatures, error):
+            if file_path != self.current_file_path:
+                return
+            if error:
+                print(f"Could not analyze for signatures: {error}")
+                signatures = []
+            self.signatures = signatures
+            if signatures:
+                self.emit("signatures-found", signatures)
+            elif self.active_cert_path and show_toast:
+                self.emit("toast-request", self._("toast_select_area"), None, None)
+            self._update_actions_state()
+
+        self._analysis_token = run_in_thread(lambda token: analyze_signatures(file_path, cancelled=token.is_cancelled), on_done)
 
     def on_show_signatures_clicked(self, action, param):
         """Focuses the sidebar on the list of existing signatures."""
@@ -531,36 +432,18 @@ class GnomeSign(Adw.Application):
                 show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(e))
 
     def _get_signed_pdf_bytes_in_memory(self, private_key_pyca, certificate_pyca):
-        """Encapsulates the pyHanko signing logic, returning the result as bytes."""
-        signing_key_asn1 = translate_pyca_cryptography_key_to_asn1(private_key_pyca)
-        signer_cert_asn1 = translate_pyca_cryptography_cert_to_asn1(certificate_pyca)
-        
-        signer = signers.SimpleSigner(signing_cert=signer_cert_asn1, signing_key=signing_key_asn1, cert_registry=SimpleCertificateStore.from_certs([signer_cert_asn1]))
+        """Converts the on-screen selection to PDF coordinates and delegates to the signing service."""
         x, y, w, h = self.signature_rect
         view_width = self.window.drawing_area.get_width()
         scale = self.page.rect.width / view_width if view_width > 0 else 1
         fitz_rect = pymupdf.Rect(x * scale, y * scale, (x + w) * scale, (y + h) * scale)
-        parsed_pango_text = self.get_parsed_stamp_text(certificate_pyca)
-        html_content = pango_to_html(parsed_pango_text)
-        stamp_creator = HtmlStamp(html_content=html_content, width=fitz_rect.width, height=fitz_rect.height)
-        
-        meta = PdfSignatureMetadata(
-            field_name=f'Signature-{int(datetime.now().timestamp() * 1000)}',
-            reason=self.config.get_signature_reason() or None,
-            location=self.config.get_signature_location() or None
+        page_height = self.page.rect.height
+        box = (fitz_rect.x0, page_height - fitz_rect.y1, fitz_rect.x1, page_height - fitz_rect.y0)
+        return sign_pdf(
+            self.current_file_path, private_key_pyca, certificate_pyca, self.current_page, box,
+            self.get_parsed_stamp_text(certificate_pyca),
+            reason=self.config.get_signature_reason(), location=self.config.get_signature_location(),
         )
-        
-        pdf_box_y0 = self.page.rect.height - fitz_rect.y1
-        pdf_box_y1 = self.page.rect.height - fitz_rect.y0
-        new_field_spec = fields.SigFieldSpec(sig_field_name=meta.field_name, on_page=self.current_page, box=(fitz_rect.x0, pdf_box_y0, fitz_rect.x1, pdf_box_y1))
-        
-        pdf_signer = PdfSigner(meta, signer, stamp_style=stamp_creator.get_style(), new_field_spec=new_field_spec)
-        
-        output_buffer = BytesIO()
-        with open(self.current_file_path, "rb") as orig_f:
-            writer = IncrementalPdfFileWriter(orig_f, strict=False)
-            pdf_signer.sign_pdf(writer, output=output_buffer)
-        return output_buffer.getvalue()
 
     def _save_via_portal(self, content_to_save_bytes):
         """Handles saving the signed file using the Gtk.FileChooserNative portal."""
@@ -604,28 +487,28 @@ class GnomeSign(Adw.Application):
         create_about_dialog(self.window, self._)
 
     def search_text(self, text):
-        """Performs a text search in the document and updates the UI."""
+        """Searches the document in a worker thread; a newer query cancels the running one."""
         if not self.doc or not text:
             return
         self.clear_search()
-        for page_num, page in enumerate(self.doc):
-            found_rects = page.search_for(text) 
-            for rect in found_rects:
-                context_rect = pymupdf.Rect(
-                    rect.x0 - 50,  
-                    rect.y0 - 5,   
-                    rect.x1 + 50,  
-                    rect.y1 + 5    
-                )  
-                context = page.get_textbox(context_rect).replace('\n', ' ').strip()                
-                self.search_results.append(SearchResult(page_num, rect, context))
-        self.window.sidebar.populate_search_results(self.search_results)
-        if self.search_results:
-            self.select_search_result(0)
-        self.display_page(self.current_page, keep_sidebar_view=True)
+        path = self.current_file_path
+
+        def on_done(results, error):
+            if error or path != self.current_file_path:
+                return
+            self.search_results = results
+            self.window.sidebar.populate_search_results(self.search_results)
+            if self.search_results:
+                self.select_search_result(0)
+            self.display_page(self.current_page, keep_sidebar_view=True)
+
+        self._search_token = run_in_thread(lambda token: search_document(path, text, cancelled=token.is_cancelled), on_done)
 
     def clear_search(self):
         """Clears the current search."""
+        if self._search_token:
+            self._search_token.cancel()
+            self._search_token = None
         self.search_results = []
         self.search_highlights_on_page = []
         self.current_search_result_index = -1
@@ -792,19 +675,7 @@ class GnomeSign(Adw.Application):
             template_obj = self.config.get_active_template()
             if not template_obj: return "Error: No active signature template found."
             template_text = template_obj.get("template", template_obj.get("template_es", ""))
-
-        def get_cn(name):
-            try: return name.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0].value
-            except (IndexError, AttributeError): return str(name)
-
-        text = template_text.replace("$$SUBJECTCN$$", get_cn(certificate.subject))\
-                           .replace("$$ISSUERCN$$", get_cn(certificate.issuer))\
-                           .replace("$$CERTSERIAL$$", str(certificate.serial_number))
-        
-        if date_match := re.search(r'\$\$SIGNDATE=(.*?)\$\$', text):
-            format_pattern = date_match.group(1).replace("dd", "%d").replace("MM", "%m").replace("yyyy", "%Y").replace("yy", "%y").replace("HH", "%H").replace("mm", "%M").replace("ss", "%S")
-            text = text.replace(date_match.group(0), datetime.now().strftime(format_pattern))
-        return text
+        return parse_stamp_text(template_text, certificate)
 
     def set_active_certificate(self, path):
         """Sets the active certificate, saves the config, and notifies the UI."""
