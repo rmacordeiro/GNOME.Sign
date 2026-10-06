@@ -38,6 +38,19 @@
   <launchable type="desktop-id">io.github.ppgllrd.GNOME-Sign.desktop</launchable>
   <provides><binary>gnomesign</binary></provides>
   <releases>
+    <release version="1.1.0" date="2026-10-06">
+      <description>
+        <ul>
+          <li>Signature details now show the algorithm, coverage, trusted timestamp, certificate chain and warnings.</li>
+          <li>New signing options: RFC 3161 timestamps, certification signatures and invisible signatures.</li>
+          <li>Review a summary before signing; signing no longer blocks the interface.</li>
+          <li>Optional online revocation checks (with a privacy notice) and user-provided trusted certificates.</li>
+          <li>Visible signatures are placed correctly on rotated and cropped pages.</li>
+          <li>Keyboard control of the signature box and accessible names for header buttons.</li>
+          <li>Translations are now standard .po files in the po/ folder.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.5" date="2026-10-06">
       <description>
         <ul>

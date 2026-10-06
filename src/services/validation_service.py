@@ -40,17 +40,42 @@ def flatten_page_tree(node, reference=None):
     return pages
 
 
-def analyze_signatures(file_path, trust_roots=None, cancelled=None):
+def load_certificates_from_file(path):
+    """Reads one or more X.509 certificates (PEM bundle or single DER file); raises ValueError if none are found."""
+    with open(path, 'rb') as f:
+        data = f.read()
+    if pem.detect(data):
+        certs = [asn1_x509.Certificate.load(der) for _, _, der in pem.unarmor(data, multiple=True)]
+    else:
+        certs = [asn1_x509.Certificate.load(data)]
+    if not certs:
+        raise ValueError(f"No certificate found in {path}")
+    return certs
+
+
+def build_trust_roots(extra_paths=()):
+    """System trust roots plus user-configured certificates; unreadable extra files are skipped."""
+    roots = list(load_system_trust_roots())
+    for path in extra_paths:
+        try:
+            roots.extend(load_certificates_from_file(path))
+        except (OSError, ValueError):
+            continue
+    return roots
+
+
+def analyze_signatures(file_path, trust_roots=None, cancelled=None, allow_online=False):
     """Validates every embedded signature of a PDF and returns a list of SignatureDetails.
 
-    Never fetches revocation/AIA data: those URLs come from the untrusted PDF.
+    By default nothing is fetched from the network, because revocation/AIA URLs come from the untrusted PDF.
+    Pass allow_online=True only after the user opted in to online revocation checks.
     `cancelled` is an optional callable checked between signatures.
     """
     roots = load_system_trust_roots() if trust_roots is None else trust_roots
     signatures = []
     with open(file_path, 'rb') as f:
         reader = PdfFileReader(f, strict=False)
-        validation_context = ValidationContext(trust_roots=roots, allow_fetching=False)
+        validation_context = ValidationContext(trust_roots=roots, allow_fetching=allow_online)
         pages = flatten_page_tree(reader.root['/Pages'])
         for sig in reader.embedded_signatures:
             if cancelled and cancelled():
@@ -62,5 +87,5 @@ def analyze_signatures(file_path, trust_roots=None, cancelled=None):
                 rect = [float(v) for v in sig.sig_field.get('/Rect', [])]
             except (ValueError, KeyError, IndexError, AttributeError):
                 page_num, rect = -1, None
-            signatures.append(SignatureDetails(sig, status, page_num, rect))
+            signatures.append(SignatureDetails(sig, status, page_num, rect, online_checks=allow_online))
     return signatures

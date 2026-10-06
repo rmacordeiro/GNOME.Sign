@@ -41,3 +41,11 @@ def render_thumbnail_png(path, page_num, max_width=150):
         page = doc[page_num]
         zoom = max_width / page.rect.width if page.rect.width else 1
         return page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False).tobytes("png")
+
+
+def display_rect_to_pdf_box(page, rect):
+    """Converts a rectangle in displayed page coordinates (top-left origin, after /Rotate and CropBox)
+    into the unrotated PDF user-space box (x0, y0, x1, y1) that signature fields use."""
+    r = pymupdf.Rect(rect) * page.derotation_matrix * ~page.transformation_matrix
+    r.normalize()
+    return (r.x0, r.y0, r.x1, r.y1)

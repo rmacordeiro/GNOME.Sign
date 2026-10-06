@@ -9,7 +9,9 @@ from pyhanko.keys.internal import (
     translate_pyca_cryptography_key_to_asn1,
 )
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from pyhanko.sign import fields, signers
+from urllib.parse import urlparse
+
+from pyhanko.sign import fields, signers, timestamps
 from pyhanko.sign.signers.pdf_signer import PdfSigner, PdfSignatureMetadata
 from pyhanko_certvalidator.registry import SimpleCertificateStore
 
@@ -18,7 +20,7 @@ from stamp_creator import HtmlStamp, pango_to_html
 _DATE_TOKENS = (("dd", "%d"), ("MM", "%m"), ("yyyy", "%Y"), ("yy", "%y"), ("HH", "%H"), ("mm", "%M"), ("ss", "%S"))
 
 
-def _common_name(name):
+def common_name(name):
     try:
         return name.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0].value
     except (IndexError, AttributeError):
@@ -27,8 +29,8 @@ def _common_name(name):
 
 def parse_stamp_text(template_text, certificate, now=None):
     """Replaces the $$...$$ placeholders of a stamp template with data from the certificate."""
-    text = (template_text.replace("$$SUBJECTCN$$", _common_name(certificate.subject))
-            .replace("$$ISSUERCN$$", _common_name(certificate.issuer))
+    text = (template_text.replace("$$SUBJECTCN$$", common_name(certificate.subject))
+            .replace("$$ISSUERCN$$", common_name(certificate.issuer))
             .replace("$$CERTSERIAL$$", str(certificate.serial_number)))
     if date_match := re.search(r'\$\$SIGNDATE=(.*?)\$\$', text):
         pattern = date_match.group(1)
@@ -38,27 +40,56 @@ def parse_stamp_text(template_text, certificate, now=None):
     return text
 
 
+TIMESTAMP_TIMEOUT_SECONDS = 15
+
+
+def validate_timestamp_url(url):
+    """Returns the stripped URL if it is a usable http(s) address, otherwise raises ValueError."""
+    url = (url or "").strip()
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        raise ValueError(f"Invalid timestamp server URL: {url!r}")
+    return url
+
+
 def sign_pdf(file_path, private_key, certificate, page_index, box, stamp_text,
-             reason=None, location=None, field_name=None):
+             reason=None, location=None, field_name=None,
+             timestamp_url=None, certify=False, visible=True):
     """Signs a PDF with an incremental update and returns the signed bytes.
 
-    `box` is (x0, y0, x1, y1) in PDF user space (origin at the bottom-left of the page).
+    `box` is (x0, y0, x1, y1) in PDF user space (origin at the bottom-left of the page); ignored when invisible.
     `stamp_text` is the already-parsed Pango markup shown inside the visible signature.
+    `timestamp_url` adds an RFC 3161 trusted timestamp from that server (requires network access).
+    `certify` makes this a certification signature that forbids further changes (only valid as the first signature).
     """
     signing_key = translate_pyca_cryptography_key_to_asn1(private_key)
     signer_cert = translate_pyca_cryptography_cert_to_asn1(certificate)
     signer = signers.SimpleSigner(signing_cert=signer_cert, signing_key=signing_key,
                                   cert_registry=SimpleCertificateStore.from_certs([signer_cert]))
 
-    x0, y0, x1, y1 = box
-    stamp = HtmlStamp(html_content=pango_to_html(stamp_text), width=x1 - x0, height=y1 - y0)
+    meta_args = {}
+    if certify:
+        meta_args = {"certify": True, "docmdp_permissions": fields.MDPPerm.NO_CHANGES}
     meta = PdfSignatureMetadata(
         field_name=field_name or f'Signature-{int(datetime.now().timestamp() * 1000)}',
         reason=reason or None,
         location=location or None,
+        **meta_args,
     )
-    field_spec = fields.SigFieldSpec(sig_field_name=meta.field_name, on_page=page_index, box=box)
-    pdf_signer = PdfSigner(meta, signer, stamp_style=stamp.get_style(), new_field_spec=field_spec)
+
+    stamp_style = None
+    if visible:
+        x0, y0, x1, y1 = box
+        stamp_style = HtmlStamp(html_content=pango_to_html(stamp_text), width=x1 - x0, height=y1 - y0).get_style()
+        field_spec = fields.SigFieldSpec(sig_field_name=meta.field_name, on_page=page_index, box=box)
+    else:
+        field_spec = fields.SigFieldSpec(sig_field_name=meta.field_name, on_page=page_index)
+
+    timestamper = None
+    if timestamp_url:
+        timestamper = timestamps.HTTPTimeStamper(validate_timestamp_url(timestamp_url), timeout=TIMESTAMP_TIMEOUT_SECONDS)
+
+    pdf_signer = PdfSigner(meta, signer, stamp_style=stamp_style, new_field_spec=field_spec, timestamper=timestamper)
 
     output = BytesIO()
     with open(file_path, "rb") as source:

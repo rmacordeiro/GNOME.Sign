@@ -6,6 +6,7 @@ from gi.repository import Gtk, Pango, PangoCairo, Secret
 import uuid
 import re
 from certificate_manager import KEYRING_SCHEMA
+from ui.dialogs import show_confirm_dialog
 
 class StampEditorDialog(Gtk.Dialog):
     """A dialog for creating, editing, and managing signature stamp templates."""
@@ -239,16 +240,16 @@ class StampEditorDialog(Gtk.Dialog):
         
         if self._is_form_dirty():
             target_id = combo.get_active_id()
-            confirm_dialog = Gtk.MessageDialog(transient_for=self, modal=True, message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.YES_NO, text=self.i18n._("unsaved_changes_title"), secondary_text=self.i18n._("unsaved_changes_message"))
-            def on_confirm_response(conf_d, res):
-                if res == Gtk.ResponseType.YES:
-                    self._load_template_data(target_id)
-                else:
-                    self.block_combo_changed = True
-                    self.template_combo.set_active_id(self.current_id)
-                    self.block_combo_changed = False
-                conf_d.destroy()
-            confirm_dialog.connect("response", on_confirm_response); confirm_dialog.present()
+
+            def revert_selection():
+                self.block_combo_changed = True
+                self.template_combo.set_active_id(self.current_id)
+                self.block_combo_changed = False
+
+            show_confirm_dialog(
+                self, self.i18n._("unsaved_changes_title"), self.i18n._("unsaved_changes_message"),
+                self.i18n._("discard"), self.i18n._("cancel"), lambda: self._load_template_data(target_id),
+                on_cancel=revert_selection)
             return
 
         if active_id := combo.get_active_id():
@@ -302,11 +303,9 @@ class StampEditorDialog(Gtk.Dialog):
     def _on_close_request(self, dialog):
         """Handles the dialog close request, checking for unsaved changes before closing."""
         if self._is_form_dirty():
-            confirm_dialog = Gtk.MessageDialog(transient_for=self, modal=True, message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.YES_NO, text=self.i18n._("unsaved_changes_title"), secondary_text=self.i18n._("confirm_close_message"))
-            def on_confirm_response(conf_d, res):
-                if res == Gtk.ResponseType.YES: self.destroy()
-                conf_d.destroy()
-            confirm_dialog.connect("response", on_confirm_response); confirm_dialog.present()
+            show_confirm_dialog(
+                self, self.i18n._("unsaved_changes_title"), self.i18n._("confirm_close_message"),
+                self.i18n._("discard"), self.i18n._("cancel"), self.destroy)
             return True 
         return False
 

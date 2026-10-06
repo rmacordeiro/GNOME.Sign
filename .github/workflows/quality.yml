@@ -28,6 +28,10 @@ jobs:
           python -m pip install pytest ruff mypy pip-audit PyGObject
       - name: Lockfile consistency
         run: python scripts/sync-deps.py --check
+
+      - name: Check version consistency
+        run: python scripts/version.py --check
+
       - name: Ruff
         run: ruff check .
       - name: Mypy

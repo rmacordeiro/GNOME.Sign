@@ -1,3 +1,15 @@
+gnome-sign (1.1.0-1) unstable; urgency=medium
+
+  * Add RFC 3161 timestamping, certification and invisible signatures.
+  * Add a review-before-signing step and run signing off the UI thread.
+  * Show technical signature details and warnings; add optional online
+    revocation checks and user-provided trusted certificates.
+  * Fix visible signature placement on rotated and cropped pages.
+  * Add keyboard control of the signature box and accessible labels.
+  * Move translations to .po files.
+
+ -- GNOME-Sign Maintainers <packages@users.noreply.github.com>  Tue, 06 Oct 2026 18:00:00 +0000
+
 gnome-sign (1.0.5-1) unstable; urgency=medium
 
   * Run signature validation, text search and thumbnail rendering off the UI

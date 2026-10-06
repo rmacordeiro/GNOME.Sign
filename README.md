@@ -12,6 +12,9 @@ GNOME-Sign is a simple and easy-to-use application for signing PDF documents wit
 *   **Printing**: Print PDF documents using the system's native print dialog.
 *   **Recent Files**: Quickly access your recently opened files.
 *   **Signature validation**: Signatures are checked against the system trust store; no network requests are made while opening a PDF.
+*   **Advanced signing** (Preferences): RFC 3161 timestamps, certification signatures, invisible signatures and a review-before-signing summary.
+*   **Signature details**: algorithm, coverage, trusted timestamp, certificate chain and warnings; optional online revocation checks (off by default) and extra trusted certificates.
+*   **Keyboard**: `Ctrl+Shift+N` creates a signature box, `Alt+arrows` move it and `Alt+Shift+arrows` resize it.
 *   **Translations**: The interface is available in English, Spanish, and Portuguese.
 
 ## Build and Packaging
@@ -112,3 +115,7 @@ Quality checks (also run in CI): `pytest`, `ruff check .`, `mypy`, `pip-audit -r
 ### Code layout
 
 `src/main.py` and `src/ui/` hold the GTK/libadwaita layer. GTK-free logic lives in `src/services/` (`signing_service`, `validation_service`, `document_service`, `tasks`) and `src/models.py`, so signing, validation and search are unit-tested without a display. Signature validation, text search and thumbnail rendering run off the UI thread.
+
+### Translations
+
+Texts are in `po/<lang>.po` (msgid = key used in code). See [CONTRIBUTING.md](CONTRIBUTING.md) to add a language. Other docs: [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). `scripts/version.py --check` verifies that all version locations match.
