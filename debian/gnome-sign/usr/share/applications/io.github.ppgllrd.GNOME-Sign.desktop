@@ -2,8 +2,7 @@
 Name=GNOME-Sign
 Comment=Sign PDF documents with digital certificates
 Comment[es]=Firma documentos PDF con certificados digitales
-Comment[pt]=Assinatura de documentos PDF com certificados digitais
-Exec=gnome-sign
+Exec=gnomesign
 Icon=io.github.ppgllrd.GNOME-Sign
 Terminal=false
 Type=Application
