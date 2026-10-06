@@ -266,7 +266,7 @@ class AppWindow(Adw.ApplicationWindow):
     
     def _on_signature_state_changed(self, app):
         """Handles the 'signature-state-changed' signal, updating the sign button."""
-        can_sign = app.doc is not None and app.signature_rect and app.active_cert_path
+        can_sign = app.can_sign()
         self.sign_button.set_sensitive(can_sign)
         if can_sign: self.sign_button.set_tooltip_text(app._("sign_button_tooltip_sign"))
         elif not app.active_cert_path: self.sign_button.set_tooltip_text(app._("no_cert_selected_error"))
@@ -297,8 +297,22 @@ class AppWindow(Adw.ApplicationWindow):
         self.page_entry_button.set_tooltip_text(app._("jump_to_page_title"))
         self.show_sigs_button.set_tooltip_text(app._("show_signatures_tooltip"))
         self._update_certs_button_tooltip()
+        self._apply_accessible_labels(app)
         self._on_signature_state_changed(app)
     
+    def _apply_accessible_labels(self, app):
+        """Gives icon-only header buttons explicit names for screen readers."""
+        labels = {
+            self.sidebar_button: "toggle_sidebar_tooltip", self.open_button: "open_pdf",
+            self.search_button: "search_tooltip", self.prev_page_button: "prev_page",
+            self.next_page_button: "next_page", self.page_entry_button: "jump_to_page_title",
+            self.show_sigs_button: "show_signatures_tooltip", self.prev_search_button: "prev_result_tooltip",
+            self.next_search_button: "next_result_tooltip",
+        }
+        for button, key in labels.items():
+            button.update_property([Gtk.AccessibleProperty.LABEL], [app._(key)])
+        self.drawing_area.update_property([Gtk.AccessibleProperty.LABEL], [app._("canvas_accessible_label")])
+
     def _on_certificates_changed(self, app):
         """Handles the 'certificates-changed' signal."""
         self.invalidate_stamp_preview()
@@ -313,12 +327,17 @@ class AppWindow(Adw.ApplicationWindow):
             if cert_details := next((c for c in app.cert_manager.get_all_certificate_details() if c['path'] == app.active_cert_path), None):
                 tooltip = cert_details['subject_cn']
         self.certs_button.set_tooltip_text(tooltip)
+        self.certs_button.update_property([Gtk.AccessibleProperty.LABEL], [tooltip])
+        self.sign_button.update_property([Gtk.AccessibleProperty.LABEL], [app._("sign_document")])
     
     def _on_key_pressed(self, controller, keyval, keycode, state):
         """Handles key press events for page navigation and scrolling."""
         app = self.get_application()
         if not app.doc: return False
         
+        if self._handle_signature_box_keys(app, keyval, state):
+            return True
+
         SCROLL_STEP = 40.0 
         if keyval == Gdk.KEY_Page_Down:
             app.on_next_page_clicked(None); return True
@@ -331,6 +350,33 @@ class AppWindow(Adw.ApplicationWindow):
             if adj := self.scrolled_window.get_vadjustment():
                 adj.set_value(max(adj.get_value() - SCROLL_STEP, adj.get_lower())); return True
         return False
+
+    def _handle_signature_box_keys(self, app, keyval, state):
+        """Keyboard alternative to dragging: Ctrl+Shift+N creates the box, Alt+arrows move it, Alt+Shift+arrows resize it."""
+        if not app.page:
+            return False
+        width, height = self.drawing_area.get_width(), self.drawing_area.get_height()
+        ctrl_shift = Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.SHIFT_MASK
+        if (state & ctrl_shift) == ctrl_shift and keyval in (Gdk.KEY_N, Gdk.KEY_n):
+            box_w, box_h = width * 0.35, width * 0.35 * 0.4
+            app.signature_rect = ((width - box_w) / 2, height - box_h - 20, box_w, box_h)
+            app.emit("signature-state-changed")
+            return True
+        if not (state & Gdk.ModifierType.ALT_MASK) or not app.signature_rect:
+            return False
+        step = 10.0
+        deltas = {Gdk.KEY_Left: (-step, 0), Gdk.KEY_Right: (step, 0), Gdk.KEY_Up: (0, -step), Gdk.KEY_Down: (0, step)}
+        if keyval not in deltas:
+            return False
+        dx, dy = deltas[keyval]
+        x, y, w, h = app.signature_rect
+        if state & Gdk.ModifierType.SHIFT_MASK:
+            w, h = max(30.0, min(w + dx, width - x)), max(30.0, min(h + dy, height - y))
+        else:
+            x, y = max(0.0, min(x + dx, width - w)), max(0.0, min(y + dy, height - h))
+        app.signature_rect = (x, y, w, h)
+        app.emit("signature-state-changed")
+        return True
 
     def show_signature_info(self, count):
         """Shows the banner for existing signatures."""

@@ -1,0 +1,496 @@
+# GNOME-Sign translation catalog.
+# msgid is the message key used in the code; msgstr is the text shown to the user.
+# Placeholders such as {} must be kept as they are.
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-sign\n"
+"Language: pt\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "about"
+msgstr "Acerca"
+
+msgid "accept"
+msgstr "Aceitar"
+
+msgid "add_certificate"
+msgstr "Adicionar certificado..."
+
+msgid "bad_password_or_file"
+msgstr "Palavra-passe incorreta ou ficheiro danificado."
+
+msgid "cancel"
+msgstr "Cancelar"
+
+msgid "certificates"
+msgstr "Certificados"
+
+msgid "close_button"
+msgstr "Fechar"
+
+msgid "confirm_close_message"
+msgstr "Fechar sem guardar as alterações?"
+
+msgid "confirm_delete_cert_message"
+msgstr "Tem a certeza de que pretende eliminar permanentemente este certificado e a palavra-passe guardada?"
+
+msgid "confirm_delete_cert_title"
+msgstr "Confirmar eliminação"
+
+msgid "copy"
+msgstr "cópia"
+
+msgid "credential_load_error"
+msgstr "Não foi possível carregar as credenciais do certificado."
+
+msgid "delete"
+msgstr "Eliminar"
+
+msgid "duplicate"
+msgstr "Duplicar"
+
+msgid "edit_stamp_templates"
+msgstr "Editar modelos de assinatura"
+
+msgid "error"
+msgstr "Erro"
+
+msgid "expired"
+msgstr "Expirado"
+
+msgid "expires"
+msgstr "Expira"
+
+msgid "expires_soon"
+msgstr "Expira em breve"
+
+msgid "font"
+msgstr "Tipo de letra"
+
+msgid "general"
+msgstr "Geral"
+
+msgid "go_to_signatures"
+msgstr "Ver assinaturas"
+
+msgid "issuer"
+msgstr "Emissor"
+
+msgid "jump_to_page_prompt"
+msgstr "Ir para a página (1 - {})"
+
+msgid "jump_to_page_title"
+msgstr "Ir para a página"
+
+msgid "language"
+msgstr "Idioma"
+
+msgid "load_certificate"
+msgstr "Carregar certificado..."
+
+msgid "location_placeholder"
+msgstr "Ex.: Lisboa, Portugal"
+
+msgid "manage_certificates_tooltip"
+msgstr "Gerir certificados"
+
+msgid "need_pdf_and_area"
+msgstr "Tem de abrir um PDF e selecionar uma área de assinatura."
+
+msgid "new"
+msgstr "Novo"
+
+msgid "next_page"
+msgstr "Página seguinte"
+
+msgid "next_result_tooltip"
+msgstr "Resultado seguinte"
+
+msgid "no_cert_selected_error"
+msgstr "Selecione um certificado nas Preferências antes de assinar."
+
+msgid "open"
+msgstr "Abrir"
+
+msgid "open_cert_dialog_title"
+msgstr "Selecionar ficheiro de certificado (.p12/.pfx)"
+
+msgid "open_pdf"
+msgstr "Abrir PDF..."
+
+msgid "open_pdf_dialog_title"
+msgstr "Abrir documento PDF"
+
+msgid "open_pdf_error"
+msgstr "Não foi possível abrir o PDF: {}"
+
+msgid "open_recent"
+msgstr "Abrir recentes"
+
+msgid "p12_files"
+msgstr "Ficheiros PKCS#12"
+
+msgid "page_thumbnails"
+msgstr "Miniaturas das páginas"
+
+msgid "password"
+msgstr "Palavra-passe"
+
+msgid "path"
+msgstr "Caminho"
+
+msgid "pdf_files"
+msgstr "Ficheiros PDF"
+
+msgid "preferences"
+msgstr "Preferências"
+
+msgid "prev_page"
+msgstr "Página anterior"
+
+msgid "prev_result_tooltip"
+msgstr "Resultado anterior"
+
+msgid "preview"
+msgstr "Pré-visualizar"
+
+msgid "print_document"
+msgstr "Imprimir documento..."
+
+msgid "print_error_message"
+msgstr "Não foi possível imprimir: {}"
+
+msgid "print_error_title"
+msgstr "Erro de impressão"
+
+msgid "print_success_toast"
+msgstr "Documento enviado para a impressora"
+
+msgid "reason_placeholder"
+msgstr "Ex.: De acordo com os termos"
+
+msgid "save"
+msgstr "Guardar"
+
+msgid "save_pdf_dialog_title"
+msgstr "Guardar PDF assinado"
+
+msgid "search_results"
+msgstr "Resultados da pesquisa"
+
+msgid "search_tooltip"
+msgstr "Pesquisar no documento"
+
+msgid "select_certificate"
+msgstr "Gerir certificados"
+
+msgid "serial"
+msgstr "Número de série"
+
+msgid "set_as_active"
+msgstr "Usar para assinar"
+
+msgid "show_signatures_menu_item"
+msgstr "Mostrar assinaturas"
+
+msgid "show_signatures_tooltip"
+msgstr "Mostrar assinaturas existentes no documento"
+
+msgid "sig_details_title"
+msgstr "Detalhes da assinatura"
+
+msgid "sig_error_message"
+msgstr "Erro: {}"
+
+msgid "sig_error_title"
+msgstr "Erro de assinatura"
+
+msgid "sig_integrity_error"
+msgstr "A assinatura é inválida ou o documento foi alterado."
+
+msgid "sig_integrity_ok"
+msgstr "A assinatura é criptograficamente válida e o documento não foi alterado."
+
+msgid "sig_revoked"
+msgstr "O certificado do assinante foi revogado."
+
+msgid "sig_trust_ok"
+msgstr "O certificado do assinante é fidedigno."
+
+msgid "sig_trust_untrusted"
+msgstr "Não foi possível estabelecer confiança no certificado do assinante."
+
+msgid "sig_validity_error"
+msgstr "A assinatura não é criptograficamente válida."
+
+msgid "sig_validity_ok"
+msgstr "A assinatura é criptograficamente válida."
+
+msgid "sig_validity_title"
+msgstr "Estado da assinatura"
+
+msgid "sign_button_tooltip_select_area"
+msgstr "Arraste sobre o documento para selecionar a área de assinatura"
+
+msgid "sign_button_tooltip_sign"
+msgstr "Assinar o documento"
+
+msgid "sign_date"
+msgstr "Data da assinatura"
+
+msgid "sign_document"
+msgstr "Assinar documento"
+
+msgid "sign_reason"
+msgstr "Assinado com o GNOME-Sign"
+
+msgid "sign_success_message"
+msgstr "Guardado como: {}"
+
+msgid "sign_success_title"
+msgstr "Documento assinado"
+
+msgid "signature_contact_label"
+msgstr "Contacto"
+
+msgid "signature_location"
+msgstr "Local da assinatura (predefinido)"
+
+msgid "signature_location_label"
+msgstr "Local"
+
+msgid "signature_reason"
+msgstr "Motivo da assinatura (predefinido)"
+
+msgid "signature_reason_label"
+msgstr "Motivo"
+
+msgid "signature_settings"
+msgstr "Definições da assinatura"
+
+msgid "signatures_found_toast"
+msgstr "Foram encontradas {} assinaturas no documento."
+
+msgid "signer"
+msgstr "Assinante"
+
+msgid "size"
+msgstr "Tamanho"
+
+msgid "size_huge"
+msgstr "Enorme"
+
+msgid "size_large"
+msgstr "Grande"
+
+msgid "size_normal"
+msgstr "Normal"
+
+msgid "size_small"
+msgstr "Pequeno"
+
+msgid "stamp_editor_bold_tooltip"
+msgstr "Negrito"
+
+msgid "stamp_editor_color_tooltip"
+msgstr "Cor do texto"
+
+msgid "stamp_editor_font_tooltip"
+msgstr "Tipo de letra"
+
+msgid "stamp_editor_italic_tooltip"
+msgstr "Itálico"
+
+msgid "stamp_editor_size_tooltip"
+msgstr "Tamanho da letra"
+
+msgid "stamp_editor_underline_tooltip"
+msgstr "Sublinhado"
+
+msgid "success"
+msgstr "Sucesso"
+
+msgid "template"
+msgstr "Modelo"
+
+msgid "template_content"
+msgstr "Conteúdo do modelo (marcação Pango)"
+
+msgid "template_en"
+msgstr "Modelo em inglês (marcação Pango)"
+
+msgid "template_es"
+msgstr "Modelo em espanhol (marcação Pango)"
+
+msgid "template_name"
+msgstr "Nome do modelo"
+
+msgid "templates"
+msgstr "Modelos"
+
+msgid "toast_select_area"
+msgstr "Arraste para selecionar uma área e prima o botão de assinatura"
+
+msgid "toggle_sidebar_tooltip"
+msgstr "Mostrar/ocultar painel lateral"
+
+msgid "unsaved_changes_message"
+msgstr "Tem alterações por guardar. Quer continuar e descartá-las?"
+
+msgid "unsaved_changes_title"
+msgstr "Alterações por guardar"
+
+msgid "welcome_button"
+msgstr "Abrir um PDF..."
+
+msgid "welcome_prompt_cert_ok"
+msgstr "Pronto para assinar"
+
+msgid "welcome_prompt_no_cert"
+msgstr "Para começar, adicione um certificado"
+
+msgid "window_title"
+msgstr "GNOME-Sign"
+
+msgid "discard"
+msgstr "Descartar"
+
+msgid "review_title"
+msgstr "Rever antes de assinar"
+
+msgid "review_certificate"
+msgstr "Certificado"
+
+msgid "review_output"
+msgstr "Ficheiro de saída"
+
+msgid "review_position"
+msgstr "Posição"
+
+msgid "review_invisible"
+msgstr "Assinatura invisível"
+
+msgid "review_page_n"
+msgstr "Página {}"
+
+msgid "review_timestamp"
+msgstr "Servidor de carimbo de data/hora"
+
+msgid "review_none"
+msgstr "Nenhum"
+
+msgid "review_certification"
+msgstr "Certificação"
+
+msgid "review_certification_value"
+msgstr "Certificada (não são permitidas mais alterações)"
+
+msgid "signing_with_timestamp"
+msgstr "A assinar e a contactar o servidor de carimbo de data/hora…"
+
+msgid "sig_technical_title"
+msgstr "Detalhes técnicos"
+
+msgid "sig_algorithm"
+msgstr "Algoritmo"
+
+msgid "sig_coverage"
+msgstr "Cobertura / modificações"
+
+msgid "sig_timestamp"
+msgstr "Carimbo de data/hora fiável"
+
+msgid "sig_timestamp_trusted"
+msgstr "fiável"
+
+msgid "sig_timestamp_untrusted"
+msgstr "não fiável"
+
+msgid "sig_revocation"
+msgstr "Verificação de revogação"
+
+msgid "sig_revocation_checked"
+msgstr "realizada online"
+
+msgid "sig_revocation_offline"
+msgstr "não realizada (modo offline)"
+
+msgid "sig_chain"
+msgstr "Cadeia de certificados"
+
+msgid "sig_warn_untrusted"
+msgstr "O certificado do assinante não é fiável."
+
+msgid "sig_warn_modified"
+msgstr "O documento foi modificado após a assinatura."
+
+msgid "sig_warn_partial_coverage"
+msgstr "A assinatura não cobre todo o documento."
+
+msgid "sig_warn_docmdp"
+msgstr "As alterações violam as regras de certificação (DocMDP)."
+
+msgid "sig_warn_weak_algorithm"
+msgstr "Foi usado um algoritmo de hash fraco."
+
+msgid "sig_warn_no_timestamp"
+msgstr "Sem carimbo de data/hora fiável: a hora é declarada pelo assinante."
+
+msgid "sig_warn_offline"
+msgstr "O estado de revogação não foi verificado."
+
+msgid "advanced_signing"
+msgstr "Assinatura avançada"
+
+msgid "timestamp_url"
+msgstr "Servidor de carimbo de data/hora (RFC 3161)"
+
+msgid "timestamp_url_hint"
+msgstr "URL HTTP(S) de uma autoridade de carimbo. Deixe vazio para desativar."
+
+msgid "flag_certify_signatures"
+msgstr "Assinatura de certificação"
+
+msgid "flag_certify_signatures_desc"
+msgstr "Proíbe qualquer alteração após assinar. Válida apenas para a primeira assinatura."
+
+msgid "flag_invisible_signatures"
+msgstr "Assinatura invisível"
+
+msgid "flag_invisible_signatures_desc"
+msgstr "Assinar sem carimbo visível na página."
+
+msgid "flag_review_before_signing"
+msgstr "Rever antes de assinar"
+
+msgid "flag_review_before_signing_desc"
+msgstr "Mostrar um resumo e pedir confirmação."
+
+msgid "flag_online_validation"
+msgstr "Verificações online de certificados"
+
+msgid "flag_online_validation_desc"
+msgstr "Obter dados de revogação (OCSP/CRL) ao validar assinaturas."
+
+msgid "privacy_title"
+msgstr "Ativar verificações online?"
+
+msgid "privacy_message"
+msgstr "Validar assinaturas contactará servidores indicados nos certificados, o que lhes revela que abriu um documento assinado."
+
+msgid "trusted_certs"
+msgstr "Certificados fiáveis"
+
+msgid "trusted_certs_desc"
+msgstr "Certificados raiz adicionais (PEM/DER) para validar assinaturas. Aplica-se a documentos abertos depois."
+
+msgid "add_trusted_cert"
+msgstr "Adicionar certificado fiável"
+
+msgid "certificate_files"
+msgstr "Ficheiros de certificado"
+
+msgid "canvas_accessible_label"
+msgstr "Página do documento. Ctrl+Shift+N cria uma caixa de assinatura; Alt+setas movem-na; Alt+Shift+setas redimensionam-na."

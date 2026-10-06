@@ -1,6 +1,6 @@
 project(
   'gnome-sign',
-  version: '1.0.5',
+  version: '1.1.0',
   meson_version: '>= 0.61.0'
 )
 
@@ -58,6 +58,8 @@ service_sources = files(
   'src/services/validation_service.py'
 )
 
+po_sources = files('po/en.po', 'po/es.po', 'po/pt.po')
+
 install_data(
   launcher,
   install_dir: get_option('bindir'),
@@ -72,6 +74,7 @@ install_data(
 
 install_data(root_sources, install_dir: pkgdatadir)
 install_data(ui_sources, install_dir: join_paths(pkgdatadir, 'ui'))
+install_data(po_sources, install_dir: join_paths(pkgdatadir, 'po'))
 install_data(service_sources, install_dir: join_paths(pkgdatadir, 'services'))
 install_data(ui_component_sources, install_dir: join_paths(pkgdatadir, 'ui', 'components'))
 

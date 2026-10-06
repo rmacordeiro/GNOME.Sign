@@ -2,6 +2,9 @@
 import gi
 gi.require_version("Gtk", "4.0"); gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, GLib
+import os
+from services.signing_service import validate_timestamp_url
+from ui.dialogs import show_confirm_dialog
 from i18n import SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE
 from datetime import datetime, timezone, timedelta
 
@@ -65,6 +68,29 @@ class PreferencesWindow(Adw.PreferencesWindow):
         self.location_row.connect("notify::text", self._on_location_changed)
         self.signing_group.add(self.location_row)
         
+        self.advanced_group = Adw.PreferencesGroup.new()
+        self.page_general.add(self.advanced_group)
+
+        self.timestamp_row = Adw.EntryRow.new()
+        self.timestamp_row.connect("notify::text", self._on_timestamp_changed)
+        self.advanced_group.add(self.timestamp_row)
+
+        self.flag_rows = {}
+        for flag in ("certify_signatures", "invisible_signatures", "review_before_signing", "online_validation"):
+            row = Adw.SwitchRow.new()
+            row.connect("notify::active", self._on_flag_toggled, flag)
+            self.advanced_group.add(row)
+            self.flag_rows[flag] = row
+
+        self.trust_group = Adw.PreferencesGroup.new()
+        self.page_general.add(self.trust_group)
+        self.trust_add_button = Gtk.Button.new_from_icon_name("list-add-symbolic")
+        self.trust_add_button.add_css_class("flat")
+        self.trust_add_button.set_valign(Gtk.Align.CENTER)
+        self.trust_add_button.connect("clicked", self._on_add_trusted_clicked)
+        self.trust_group.set_header_suffix(self.trust_add_button)
+        self.trust_rows = []
+
         self.certs_page = Adw.PreferencesPage.new()
         self.certs_page.set_name("certificates") 
         self.add(self.certs_page)
@@ -81,6 +107,17 @@ class PreferencesWindow(Adw.PreferencesWindow):
         self.reason_row.set_tooltip_text(self.i18n._("reason_placeholder"))
         self.location_row.set_title(self.i18n._("signature_location"))
         self.location_row.set_tooltip_text(self.i18n._("location_placeholder"))
+        self.advanced_group.set_title(self.i18n._("advanced_signing"))
+        self.timestamp_row.set_title(self.i18n._("timestamp_url"))
+        self.timestamp_row.set_tooltip_text(self.i18n._("timestamp_url_hint"))
+        for flag, row in self.flag_rows.items():
+            row.set_title(self.i18n._(f"flag_{flag}"))
+            row.set_subtitle(self.i18n._(f"flag_{flag}_desc"))
+        self.trust_group.set_title(self.i18n._("trusted_certs"))
+        self.trust_group.set_description(self.i18n._("trusted_certs_desc"))
+        self.trust_add_button.set_tooltip_text(self.i18n._("add_trusted_cert"))
+        self.trust_add_button.update_property([Gtk.AccessibleProperty.LABEL], [self.i18n._("add_trusted_cert")])
+        self._load_advanced_values()
         self.certs_page.set_title(self.i18n._("certificates"))
         self.certs_page.set_icon_name("dialog-password-symbolic")
         self.update_ui()
@@ -158,20 +195,9 @@ class PreferencesWindow(Adw.PreferencesWindow):
     
     def _on_delete_cert_clicked(self, button, path):
         """Asks the main application to remove a certificate, after confirmation."""
-        confirm_dialog = Gtk.MessageDialog(
-            transient_for=self, 
-            modal=True, 
-            message_type=Gtk.MessageType.QUESTION, 
-            buttons=Gtk.ButtonsType.YES_NO, 
-            text=self.app._("confirm_delete_cert_title"), 
-            secondary_text=self.app._("confirm_delete_cert_message")
-        )
-        def on_confirm(d, res):
-            if res == Gtk.ResponseType.YES:
-                self.app.remove_certificate(path)
-            d.destroy()
-        confirm_dialog.connect("response", on_confirm)
-        confirm_dialog.present()
+        show_confirm_dialog(
+            self, self.app._("confirm_delete_cert_title"), self.app._("confirm_delete_cert_message"),
+            self.app._("delete"), self.app._("cancel"), lambda: self.app.remove_certificate(path))
 
     def _on_reason_changed(self, entry_row, param):
         """Updates the signature reason in the configuration (in-memory)."""
@@ -180,3 +206,80 @@ class PreferencesWindow(Adw.PreferencesWindow):
     def _on_location_changed(self, entry_row, param):
         """Updates the signature location in the configuration (in-memory)."""
         self.app.config.set_signature_location(entry_row.get_text())
+    def _load_advanced_values(self):
+        """Loads advanced signing options from the configuration without triggering change handlers."""
+        cfg = self.app.config
+        self._loading = True
+        self.timestamp_row.set_text(cfg.get_timestamp_url())
+        for flag, row in self.flag_rows.items():
+            row.set_active(cfg.get_flag(flag))
+        self._loading = False
+        self._rebuild_trusted_rows()
+
+    def _rebuild_trusted_rows(self):
+        for row in self.trust_rows:
+            self.trust_group.remove(row)
+        self.trust_rows = []
+        for path in self.app.config.get_trusted_cert_paths():
+            row = Adw.ActionRow.new()
+            row.set_title(GLib.markup_escape_text(os.path.basename(path)))
+            row.set_subtitle(GLib.markup_escape_text(path))
+            button = Gtk.Button.new_from_icon_name("user-trash-symbolic")
+            button.add_css_class("flat")
+            button.set_valign(Gtk.Align.CENTER)
+            button.set_tooltip_text(self.i18n._("delete"))
+            button.update_property([Gtk.AccessibleProperty.LABEL], [self.i18n._("delete")])
+            button.connect("clicked", self._on_remove_trusted_clicked, path)
+            row.add_suffix(button)
+            self.trust_group.add(row)
+            self.trust_rows.append(row)
+
+    def _on_timestamp_changed(self, entry_row, param):
+        if getattr(self, "_loading", False):
+            return
+        url = entry_row.get_text().strip()
+        try:
+            validate_timestamp_url(url) if url else None
+            entry_row.remove_css_class("error")
+            self.app.config.set_timestamp_url(url)
+        except ValueError:
+            entry_row.add_css_class("error")
+
+    def _on_flag_toggled(self, row, param, flag):
+        if getattr(self, "_loading", False):
+            return
+        if flag == "online_validation" and row.get_active():
+            def cancel():
+                self._loading = True
+                row.set_active(False)
+                self._loading = False
+
+            show_confirm_dialog(
+                self, self.i18n._("privacy_title"), self.i18n._("privacy_message"),
+                self.i18n._("accept"), self.i18n._("cancel"),
+                lambda: self.app.config.set_flag(flag, True), destructive=False, on_cancel=cancel)
+            return
+        self.app.config.set_flag(flag, row.get_active())
+        self.app._update_actions_state()
+        self.app.emit("signature-state-changed")
+
+    def _on_add_trusted_clicked(self, button):
+        def on_response(dialog, response):
+            if response == Gtk.ResponseType.ACCEPT and (file := dialog.get_file()):
+                self.app.config.add_trusted_cert_path(file.get_path())
+                self._rebuild_trusted_rows()
+
+        chooser = Gtk.FileChooserNative.new(
+            self.i18n._("add_trusted_cert"), self, Gtk.FileChooserAction.OPEN, self.i18n._("open"), self.i18n._("cancel"))
+        cert_filter = Gtk.FileFilter()
+        cert_filter.set_name(self.i18n._("certificate_files"))
+        for pattern in ("*.pem", "*.crt", "*.cer", "*.der"):
+            cert_filter.add_pattern(pattern)
+        chooser.add_filter(cert_filter)
+        chooser.connect("response", on_response)
+        self._trust_chooser = chooser
+        chooser.show()
+
+    def _on_remove_trusted_clicked(self, button, path):
+        self.app.config.remove_trusted_cert_path(path)
+        self._rebuild_trusted_rows()

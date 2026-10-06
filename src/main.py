@@ -14,10 +14,10 @@ from config_manager import ConfigManager
 from paths import generate_output_path
 from ui.stamp_editor_dialog import StampEditorDialog
 from ui.dialogs import create_password_dialog, create_about_dialog, show_error_dialog
-from services.document_service import search_document
+from services.document_service import display_rect_to_pdf_box, search_document
 from services.tasks import run_in_thread
-from services.signing_service import parse_stamp_text, sign_pdf
-from services.validation_service import analyze_signatures
+from services.signing_service import common_name, parse_stamp_text, sign_pdf
+from services.validation_service import analyze_signatures, build_trust_roots
 
 class GnomeSign(Adw.Application):
     """The main application class, managing state and high-level logic."""
@@ -50,6 +50,7 @@ class GnomeSign(Adw.Application):
         self.signatures = []
         self._analysis_token = None
         self._search_token = None
+        self._signing = False
         self.search_results = []
         self.search_highlights_on_page = []
         self.current_search_result_index = -1
@@ -196,7 +197,14 @@ class GnomeSign(Adw.Application):
                 self.emit("toast-request", self._("toast_select_area"), None, None)
             self._update_actions_state()
 
-        self._analysis_token = run_in_thread(lambda token: analyze_signatures(file_path, cancelled=token.is_cancelled), on_done)
+        trust_paths = list(self.config.get_trusted_cert_paths())
+        allow_online = self.config.get_flag("online_validation")
+
+        def work(token):
+            return analyze_signatures(file_path, trust_roots=build_trust_roots(trust_paths),
+                                      cancelled=token.is_cancelled, allow_online=allow_online)
+
+        self._analysis_token = run_in_thread(work, on_done)
 
     def on_show_signatures_clicked(self, action, param):
         """Focuses the sidebar on the list of existing signatures."""
@@ -263,6 +271,25 @@ class GnomeSign(Adw.Application):
             f"<b>{self._('serial')}:</b> {serial_esc}"
         ])
         
+        esc = GLib.markup_escape_text
+        tech = [f"\n<b>{self._('sig_technical_title')}</b>"]
+        if sig_details.md_algorithm or sig_details.sig_mechanism:
+            tech.append(f"<b>{self._('sig_algorithm')}:</b> {esc(sig_details.md_algorithm)} / {esc(sig_details.sig_mechanism)}")
+        if sig_details.coverage:
+            tech.append(f"<b>{self._('sig_coverage')}:</b> {esc(sig_details.coverage)} ({esc(sig_details.modification_level or '-')})")
+        if sig_details.timestamp_time:
+            trusted_ts = self._("sig_timestamp_trusted") if sig_details.timestamp_trusted else self._("sig_timestamp_untrusted")
+            tech.append(f"<b>{self._('sig_timestamp')}:</b> {esc(sig_details.timestamp_time.strftime('%Y-%m-%d %H:%M:%S %Z'))} ({trusted_ts})")
+        else:
+            tech.append(f"<b>{self._('sig_timestamp')}:</b> {self._('review_none')}")
+        revocation = self._("sig_revocation_checked") if sig_details.revocation_checked else self._("sig_revocation_offline")
+        tech.append(f"<b>{self._('sig_revocation')}:</b> {revocation}")
+        if sig_details.chain:
+            tech.append(f"<b>{self._('sig_chain')}:</b> {esc(' → '.join(sig_details.chain))}")
+        for key in sig_details.warnings:
+            tech.append(f"<span color='orange'>⚠ {esc(self._(key))}</span>")
+        details_parts.extend(tech)
+
         details_text = "\n".join(details_parts)
         
         body_label = Gtk.Label(
@@ -335,11 +362,18 @@ class GnomeSign(Adw.Application):
         """Callback that updates the state of the 'toggle_search' action."""
         action.set_state(value)
     
+    def can_sign(self):
+        """True when a document, a certificate and (for visible signatures) an area are available."""
+        has_area = self.signature_rect is not None or self.config.get_flag("invisible_signatures")
+        return bool(self.doc and self.active_cert_path and has_area and not self._signing)
+
     def on_sign_document_clicked(self, action=None, param=None):
         """Handles the main 'Sign Document' action."""
+        if self._signing:
+            return
         if not self.active_cert_path:
             self.emit("toast-request", self._("no_cert_selected_error"), None, None); return
-        if not all([self.doc, self.signature_rect, self.current_file_path]):
+        if not (self.doc and self.current_file_path and self.can_sign()):
             self.emit("toast-request", self._("need_pdf_and_area"), None, None); return
         password = Secret.password_lookup_sync(KEYRING_SCHEMA, {"path": self.active_cert_path}, None)
         if not password:
@@ -351,7 +385,40 @@ class GnomeSign(Adw.Application):
             show_error_dialog(self.window, self._("error"), self._("credential_load_error"))
             return
 
-        self._perform_signing(private_key_pyca, certificate_pyca)
+        if self.config.get_flag("review_before_signing"):
+            self._show_review_dialog(private_key_pyca, certificate_pyca)
+        else:
+            self._perform_signing(private_key_pyca, certificate_pyca)
+
+    def _show_review_dialog(self, private_key_pyca, certificate_pyca):
+        """Summarizes what is about to be signed and asks for confirmation."""
+        cfg = self.config
+        invisible = cfg.get_flag("invisible_signatures")
+        lines = [
+            (self._("review_certificate"), common_name(certificate_pyca.subject)),
+            (self._("review_output"), os.path.basename(self._generate_output_path(self.current_file_path))),
+            (self._("review_position"), self._("review_invisible") if invisible else self._("review_page_n").format(self.current_page + 1)),
+            (self._("signature_reason_label"), cfg.get_signature_reason() or "-"),
+            (self._("signature_location_label"), cfg.get_signature_location() or "-"),
+            (self._("review_timestamp"), cfg.get_timestamp_url() or self._("review_none")),
+        ]
+        if cfg.get_flag("certify_signatures"):
+            lines.append((self._("review_certification"), self._("review_certification_value")))
+        body = "\n".join(f"{label}: {value}" for label, value in lines)
+
+        dialog = Adw.MessageDialog.new(self.window, heading=self._("review_title"), body=body)
+        dialog.add_response("cancel", self._("cancel"))
+        dialog.add_response("sign", self._("sign_document"))
+        dialog.set_response_appearance("sign", Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response("sign")
+        dialog.set_close_response("cancel")
+
+        def on_response(dlg, response):
+            if response == "sign":
+                self._perform_signing(private_key_pyca, certificate_pyca)
+
+        dialog.connect("response", on_response)
+        dialog.present()
 
     def on_print_clicked(self, action, param):
         """Handles the 'Print' action."""
@@ -408,41 +475,63 @@ class GnomeSign(Adw.Application):
         return generate_output_path(input_path)
 
     def _perform_signing(self, private_key_pyca, certificate_pyca):
-        """Orchestrates the signing and saving process for native and sandboxed packages."""
+        """Signs in a worker thread (timestamp servers can be slow), then saves for native or sandboxed packages."""
         try:
-            signed_bytes = self._get_signed_pdf_bytes_in_memory(private_key_pyca, certificate_pyca)
+            kwargs = self._collect_signing_arguments(certificate_pyca)
+        except Exception as e:
+            show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(e))
+            return
+
+        source_path = self.current_file_path
+        self._signing = True
+        self._update_actions_state()
+        self.emit("signature-state-changed")
+        if kwargs.get("timestamp_url"):
+            self.emit("toast-request", self._("signing_with_timestamp"), None, None)
+
+        def on_done(signed_bytes, error):
+            self._signing = False
+            self._update_actions_state()
+            self.emit("signature-state-changed")
+            if error:
+                import traceback
+                traceback.print_exception(error)
+                show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(error))
+            elif source_path == self.current_file_path:
+                self._store_signed_bytes(signed_bytes)
+
+        run_in_thread(lambda token: sign_pdf(source_path, private_key_pyca, certificate_pyca, **kwargs), on_done)
+
+    def _store_signed_bytes(self, signed_bytes):
+        if is_sandboxed_runtime():
+            self._save_via_portal(signed_bytes)
+            return
+        try:
+            output_path = self._generate_output_path(self.current_file_path)
+            with open(output_path, "xb") as out_f:
+                out_f.write(signed_bytes)
+            self.emit("toast-request", self._("sign_success_message").format(os.path.basename(output_path)), self._("open"), lambda: self.open_file_path(output_path, show_toast=False))
         except Exception as e:
             import traceback
             traceback.print_exc()
             show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(e))
-            return
 
-        if is_sandboxed_runtime():
-            self._save_via_portal(signed_bytes)
-        else:
-            try:
-                output_path = self._generate_output_path(self.current_file_path)
-                with open(output_path, "xb") as out_f:
-                    out_f.write(signed_bytes)
-                
-                self.emit("toast-request", self._("sign_success_message").format(os.path.basename(output_path)), self._("open"), lambda: self.open_file_path(output_path, show_toast=False))
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                show_error_dialog(self.window, self._("sig_error_title"), self._("sig_error_message").format(e))
-
-    def _get_signed_pdf_bytes_in_memory(self, private_key_pyca, certificate_pyca):
-        """Converts the on-screen selection to PDF coordinates and delegates to the signing service."""
-        x, y, w, h = self.signature_rect
-        view_width = self.window.drawing_area.get_width()
-        scale = self.page.rect.width / view_width if view_width > 0 else 1
-        fitz_rect = pymupdf.Rect(x * scale, y * scale, (x + w) * scale, (y + h) * scale)
-        page_height = self.page.rect.height
-        box = (fitz_rect.x0, page_height - fitz_rect.y1, fitz_rect.x1, page_height - fitz_rect.y0)
-        return sign_pdf(
-            self.current_file_path, private_key_pyca, certificate_pyca, self.current_page, box,
-            self.get_parsed_stamp_text(certificate_pyca),
-            reason=self.config.get_signature_reason(), location=self.config.get_signature_location(),
+    def _collect_signing_arguments(self, certificate_pyca):
+        """Reads the UI/config state (main thread only) into plain arguments for the signing service."""
+        cfg = self.config
+        visible = not cfg.get_flag("invisible_signatures")
+        box = None
+        if visible:
+            x, y, w, h = self.signature_rect
+            view_width = self.window.drawing_area.get_width()
+            scale = self.page.rect.width / view_width if view_width > 0 else 1
+            box = display_rect_to_pdf_box(self.page, pymupdf.Rect(x * scale, y * scale, (x + w) * scale, (y + h) * scale))
+        return dict(
+            page_index=self.current_page, box=box,
+            stamp_text=self.get_parsed_stamp_text(certificate_pyca) if visible else "",
+            reason=cfg.get_signature_reason(), location=cfg.get_signature_location(),
+            timestamp_url=cfg.get_timestamp_url() or None,
+            certify=cfg.get_flag("certify_signatures"), visible=visible,
         )
 
     def _save_via_portal(self, content_to_save_bytes):
@@ -564,7 +653,7 @@ class GnomeSign(Adw.Application):
             if not doc_loaded and toggle_search_action.get_state().get_boolean():
                 toggle_search_action.set_state(GLib.Variant('b', False))
 
-        can_sign = doc_loaded and self.signature_rect is not None and self.active_cert_path is not None
+        can_sign = self.can_sign()
         sign_action = self.lookup_action("sign")
         if sign_action:
             sign_action.set_enabled(can_sign)

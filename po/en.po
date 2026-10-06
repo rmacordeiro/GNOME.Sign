@@ -1,0 +1,496 @@
+# GNOME-Sign translation catalog.
+# msgid is the message key used in the code; msgstr is the text shown to the user.
+# Placeholders such as {} must be kept as they are.
+msgid ""
+msgstr ""
+"Project-Id-Version: gnome-sign\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "about"
+msgstr "About"
+
+msgid "accept"
+msgstr "Accept"
+
+msgid "add_certificate"
+msgstr "Add Certificate..."
+
+msgid "bad_password_or_file"
+msgstr "Incorrect password or corrupted file."
+
+msgid "cancel"
+msgstr "Cancel"
+
+msgid "certificates"
+msgstr "Certificates"
+
+msgid "close_button"
+msgstr "Close"
+
+msgid "confirm_close_message"
+msgstr "Close without saving changes?"
+
+msgid "confirm_delete_cert_message"
+msgstr "Are you sure you want to permanently delete this certificate and its saved password?"
+
+msgid "confirm_delete_cert_title"
+msgstr "Confirm Deletion"
+
+msgid "copy"
+msgstr "copy"
+
+msgid "credential_load_error"
+msgstr "Could not load certificate credentials."
+
+msgid "delete"
+msgstr "Delete"
+
+msgid "duplicate"
+msgstr "Duplicate"
+
+msgid "edit_stamp_templates"
+msgstr "Edit Signature Templates"
+
+msgid "error"
+msgstr "Error"
+
+msgid "expired"
+msgstr "Expired"
+
+msgid "expires"
+msgstr "Expires"
+
+msgid "expires_soon"
+msgstr "Expires soon"
+
+msgid "font"
+msgstr "Font"
+
+msgid "general"
+msgstr "General"
+
+msgid "go_to_signatures"
+msgstr "View Signatures"
+
+msgid "issuer"
+msgstr "Issuer"
+
+msgid "jump_to_page_prompt"
+msgstr "Go to page (1 - {})"
+
+msgid "jump_to_page_title"
+msgstr "Go to page"
+
+msgid "language"
+msgstr "Language"
+
+msgid "load_certificate"
+msgstr "Load Certificate..."
+
+msgid "location_placeholder"
+msgstr "e.g., Madrid, Spain"
+
+msgid "manage_certificates_tooltip"
+msgstr "Manage certificates"
+
+msgid "need_pdf_and_area"
+msgstr "You need to open a PDF and select a signature area."
+
+msgid "new"
+msgstr "New"
+
+msgid "next_page"
+msgstr "Next page"
+
+msgid "next_result_tooltip"
+msgstr "Next result"
+
+msgid "no_cert_selected_error"
+msgstr "Please select a certificate in Preferences before signing."
+
+msgid "open"
+msgstr "Open"
+
+msgid "open_cert_dialog_title"
+msgstr "Select Certificate File (.p12/.pfx)"
+
+msgid "open_pdf"
+msgstr "Open PDF..."
+
+msgid "open_pdf_dialog_title"
+msgstr "Open PDF Document"
+
+msgid "open_pdf_error"
+msgstr "Could not open PDF: {}"
+
+msgid "open_recent"
+msgstr "Open Recent"
+
+msgid "p12_files"
+msgstr "PKCS#12 Files"
+
+msgid "page_thumbnails"
+msgstr "Page Thumbnails"
+
+msgid "password"
+msgstr "Password"
+
+msgid "path"
+msgstr "Path"
+
+msgid "pdf_files"
+msgstr "PDF Files"
+
+msgid "preferences"
+msgstr "Preferences"
+
+msgid "prev_page"
+msgstr "Previous page"
+
+msgid "prev_result_tooltip"
+msgstr "Previous result"
+
+msgid "preview"
+msgstr "Preview"
+
+msgid "print_document"
+msgstr "Print Document..."
+
+msgid "print_error_message"
+msgstr "Could not print: {}"
+
+msgid "print_error_title"
+msgstr "Print Error"
+
+msgid "print_success_toast"
+msgstr "Document sent to the printer"
+
+msgid "reason_placeholder"
+msgstr "e.g., I agree to the terms"
+
+msgid "save"
+msgstr "Save"
+
+msgid "save_pdf_dialog_title"
+msgstr "Save Signed PDF"
+
+msgid "search_results"
+msgstr "Search Results"
+
+msgid "search_tooltip"
+msgstr "Search in the document"
+
+msgid "select_certificate"
+msgstr "Manage Certificates"
+
+msgid "serial"
+msgstr "Serial"
+
+msgid "set_as_active"
+msgstr "Use for signing"
+
+msgid "show_signatures_menu_item"
+msgstr "Show Signatures"
+
+msgid "show_signatures_tooltip"
+msgstr "Show existing signatures in the document"
+
+msgid "sig_details_title"
+msgstr "Signature Details"
+
+msgid "sig_error_message"
+msgstr "Error: {}"
+
+msgid "sig_error_title"
+msgstr "Signature Error"
+
+msgid "sig_integrity_error"
+msgstr "The signature is invalid or the document has been modified."
+
+msgid "sig_integrity_ok"
+msgstr "The signature is cryptographically valid and the document has not been modified."
+
+msgid "sig_revoked"
+msgstr "The signer's certificate has been revoked."
+
+msgid "sig_trust_ok"
+msgstr "The signer's certificate is trusted."
+
+msgid "sig_trust_untrusted"
+msgstr "Could not establish trust in the signer's certificate."
+
+msgid "sig_validity_error"
+msgstr "The signature is not cryptographically valid"
+
+msgid "sig_validity_ok"
+msgstr "The signature is cryptographically valid."
+
+msgid "sig_validity_title"
+msgstr "Signature Status"
+
+msgid "sign_button_tooltip_select_area"
+msgstr "Drag on the document to select the signature area"
+
+msgid "sign_button_tooltip_sign"
+msgstr "Sign the document"
+
+msgid "sign_date"
+msgstr "Signature Date"
+
+msgid "sign_document"
+msgstr "Sign Document"
+
+msgid "sign_reason"
+msgstr "Signed with GNOME-Sign"
+
+msgid "sign_success_message"
+msgstr "Saved as: {}"
+
+msgid "sign_success_title"
+msgstr "Document Signed"
+
+msgid "signature_contact_label"
+msgstr "Contact"
+
+msgid "signature_location"
+msgstr "Default signing location"
+
+msgid "signature_location_label"
+msgstr "Location"
+
+msgid "signature_reason"
+msgstr "Default signing reason"
+
+msgid "signature_reason_label"
+msgstr "Reason"
+
+msgid "signature_settings"
+msgstr "Signature Settings"
+
+msgid "signatures_found_toast"
+msgstr "Found {} signatures in the document."
+
+msgid "signer"
+msgstr "Signer"
+
+msgid "size"
+msgstr "Size"
+
+msgid "size_huge"
+msgstr "Huge"
+
+msgid "size_large"
+msgstr "Large"
+
+msgid "size_normal"
+msgstr "Normal"
+
+msgid "size_small"
+msgstr "Small"
+
+msgid "stamp_editor_bold_tooltip"
+msgstr "Bold"
+
+msgid "stamp_editor_color_tooltip"
+msgstr "Text Color"
+
+msgid "stamp_editor_font_tooltip"
+msgstr "Font"
+
+msgid "stamp_editor_italic_tooltip"
+msgstr "Italic"
+
+msgid "stamp_editor_size_tooltip"
+msgstr "Font Size"
+
+msgid "stamp_editor_underline_tooltip"
+msgstr "Underline"
+
+msgid "success"
+msgstr "Success"
+
+msgid "template"
+msgstr "Template"
+
+msgid "template_content"
+msgstr "Template content (Pango markup)"
+
+msgid "template_en"
+msgstr "English Template (Pango Markup)"
+
+msgid "template_es"
+msgstr "Spanish Template (Pango Markup)"
+
+msgid "template_name"
+msgstr "Template Name"
+
+msgid "templates"
+msgstr "Templates"
+
+msgid "toast_select_area"
+msgstr "Drag to select an area and press the sign button"
+
+msgid "toggle_sidebar_tooltip"
+msgstr "Show/Hide sidebar"
+
+msgid "unsaved_changes_message"
+msgstr "You have unsaved changes. Do you want to proceed and discard them?"
+
+msgid "unsaved_changes_title"
+msgstr "Unsaved Changes"
+
+msgid "welcome_button"
+msgstr "Open a PDF..."
+
+msgid "welcome_prompt_cert_ok"
+msgstr "Ready to Sign"
+
+msgid "welcome_prompt_no_cert"
+msgstr "To begin, add a certificate"
+
+msgid "window_title"
+msgstr "GNOME-Sign"
+
+msgid "discard"
+msgstr "Discard"
+
+msgid "review_title"
+msgstr "Review before signing"
+
+msgid "review_certificate"
+msgstr "Certificate"
+
+msgid "review_output"
+msgstr "Output file"
+
+msgid "review_position"
+msgstr "Position"
+
+msgid "review_invisible"
+msgstr "Invisible signature"
+
+msgid "review_page_n"
+msgstr "Page {}"
+
+msgid "review_timestamp"
+msgstr "Timestamp server"
+
+msgid "review_none"
+msgstr "None"
+
+msgid "review_certification"
+msgstr "Certification"
+
+msgid "review_certification_value"
+msgstr "Certified (no further changes allowed)"
+
+msgid "signing_with_timestamp"
+msgstr "Signing and contacting the timestamp server…"
+
+msgid "sig_technical_title"
+msgstr "Technical details"
+
+msgid "sig_algorithm"
+msgstr "Algorithm"
+
+msgid "sig_coverage"
+msgstr "Coverage / modifications"
+
+msgid "sig_timestamp"
+msgstr "Trusted timestamp"
+
+msgid "sig_timestamp_trusted"
+msgstr "trusted"
+
+msgid "sig_timestamp_untrusted"
+msgstr "not trusted"
+
+msgid "sig_revocation"
+msgstr "Revocation check"
+
+msgid "sig_revocation_checked"
+msgstr "performed online"
+
+msgid "sig_revocation_offline"
+msgstr "not performed (offline mode)"
+
+msgid "sig_chain"
+msgstr "Certificate chain"
+
+msgid "sig_warn_untrusted"
+msgstr "The signer's certificate is not trusted."
+
+msgid "sig_warn_modified"
+msgstr "The document was modified after signing."
+
+msgid "sig_warn_partial_coverage"
+msgstr "The signature does not cover the whole document."
+
+msgid "sig_warn_docmdp"
+msgstr "Changes violate the certification (DocMDP) rules."
+
+msgid "sig_warn_weak_algorithm"
+msgstr "A weak hash algorithm was used."
+
+msgid "sig_warn_no_timestamp"
+msgstr "No trusted timestamp: the signing time is claimed by the signer."
+
+msgid "sig_warn_offline"
+msgstr "Revocation status was not checked."
+
+msgid "advanced_signing"
+msgstr "Advanced signing"
+
+msgid "timestamp_url"
+msgstr "Timestamp server (RFC 3161)"
+
+msgid "timestamp_url_hint"
+msgstr "HTTP(S) URL of a timestamp authority. Leave empty to disable."
+
+msgid "flag_certify_signatures"
+msgstr "Certification signature"
+
+msgid "flag_certify_signatures_desc"
+msgstr "Forbid any change after signing. Only valid for the first signature."
+
+msgid "flag_invisible_signatures"
+msgstr "Invisible signature"
+
+msgid "flag_invisible_signatures_desc"
+msgstr "Sign without a visible stamp on the page."
+
+msgid "flag_review_before_signing"
+msgstr "Review before signing"
+
+msgid "flag_review_before_signing_desc"
+msgstr "Show a summary and ask for confirmation."
+
+msgid "flag_online_validation"
+msgstr "Online certificate checks"
+
+msgid "flag_online_validation_desc"
+msgstr "Fetch revocation data (OCSP/CRL) when validating signatures."
+
+msgid "privacy_title"
+msgstr "Enable online checks?"
+
+msgid "privacy_message"
+msgstr "Validating signatures will contact servers named in the certificates, which reveals to them that you opened a signed document."
+
+msgid "trusted_certs"
+msgstr "Trusted certificates"
+
+msgid "trusted_certs_desc"
+msgstr "Extra root certificates (PEM/DER) used to validate signatures. Applies to newly opened documents."
+
+msgid "add_trusted_cert"
+msgstr "Add trusted certificate"
+
+msgid "certificate_files"
+msgstr "Certificate files"
+
+msgid "canvas_accessible_label"
+msgstr "Document page. Ctrl+Shift+N creates a signature box; Alt+arrows move it; Alt+Shift+arrows resize it."

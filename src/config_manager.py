@@ -33,7 +33,9 @@ class ConfigManager:
             'active_template_id': None, 'last_folder': os.path.expanduser("~"),
             'language': DEFAULT_LANGUAGE, 'active_cert_path': None,
             'signature_reason': '', 
-            'signature_location': '' 
+            'signature_location': '',
+            'timestamp_url': '', 'certify_signatures': False, 'invisible_signatures': False,
+            'online_validation': False, 'trusted_cert_paths': [], 'review_before_signing': True
         }
         for key, value in defaults.items():
             self.config_data.setdefault(key, value)
@@ -179,3 +181,29 @@ class ConfigManager:
     def set_signature_location(self, location):
         """Sets the default signature location."""
         self.config_data["signature_location"] = location
+
+    def get_timestamp_url(self):
+        """Returns the RFC 3161 timestamp server URL, or '' when timestamping is disabled."""
+        return self.config_data.get("timestamp_url", "")
+
+    def set_timestamp_url(self, url):
+        self.config_data["timestamp_url"] = url.strip()
+
+    def get_flag(self, name):
+        """Returns one of the boolean options: certify_signatures, invisible_signatures, online_validation, review_before_signing."""
+        return bool(self.config_data.get(name, False))
+
+    def set_flag(self, name, value):
+        self.config_data[name] = bool(value)
+
+    def get_trusted_cert_paths(self):
+        """Returns the user-added trusted certificate files used in addition to the system trust store."""
+        return self.config_data.setdefault("trusted_cert_paths", [])
+
+    def add_trusted_cert_path(self, path):
+        paths = self.get_trusted_cert_paths()
+        if path not in paths:
+            paths.append(path)
+
+    def remove_trusted_cert_path(self, path):
+        self.config_data["trusted_cert_paths"] = [p for p in self.get_trusted_cert_paths() if p != path]
