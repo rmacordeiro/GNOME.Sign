@@ -112,6 +112,8 @@ Dependencies are declared in `pyproject.toml` and locked with hashes in `require
 
 Quality checks (also run in CI): `pytest`, `ruff check .`, `mypy`, `pip-audit -r requirements.lock --no-deps`.
 
+This project is developed with the assistance of AI tools. All changes are planned or approved by the author, and all AI-generated code is reviewed and tested before it is merged.
+
 ### Code layout
 
 `src/main.py` and `src/ui/` hold the GTK/libadwaita layer. GTK-free logic lives in `src/services/` (`signing_service`, `validation_service`, `document_service`, `tasks`) and `src/models.py`, so signing, validation and search are unit-tested without a display. Signature validation, text search and thumbnail rendering run off the UI thread.
